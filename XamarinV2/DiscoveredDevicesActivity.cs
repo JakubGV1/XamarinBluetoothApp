@@ -179,8 +179,8 @@ namespace XamarinV2
             {
                 // Handle the click event for the selected device
                 //    await ConnectToDevice(this, searchingDevice);
-                await ConnectToDevice(this, searchingDevice);
-              //  await Task.Run(async() => { await ConnectToDevice(this, searchingDevice); });
+              //  await ConnectToDevice(this, searchingDevice);
+                await Task.Run(async() => { await ConnectToDevice(this, searchingDevice); });
             }
         }
 

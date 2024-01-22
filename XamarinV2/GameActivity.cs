@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using XamarinV2.DTO;
@@ -78,9 +77,9 @@ namespace XamarinV2
             ownTable = FindViewById<TextView>(Resource.Id.ownTable);    
             isActionPerformed = false;
            
-            InitializeConfig();
+          //  InitializeConfig();
             _turnText = FindViewById<TextView>(Resource.Id.turnText);
-            CreatePlanningTable(opponentTableLayout);
+          //  CreatePlanningTable(opponentTableLayout);
 
             string connectedDevice = Intent.GetStringExtra("Connected-Device");
                         if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
@@ -95,8 +94,12 @@ namespace XamarinV2
                             }
                             _gamestate = GameState.PlanningPhase;
                             _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
-                            Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
-                            Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
+                            if (_connectedSocket != null && _connectedSocket.IsConnected)
+                            {
+                                Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
+                                Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
+                            }
+                            
                         }
             }
 
@@ -734,11 +737,13 @@ namespace XamarinV2
                     Stream inputStream = socket.InputStream;
                     byte[] buffer = new byte[1024]; // Adjust the buffer size as needed
 
+
                     while (isConnection)
                     {
                         int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
                         // Handle the read data as needed
-                        if (bytesRead > 0)
+                        Array.Clear(buffer, 0, buffer.Length);
+                         if (bytesRead > 0)
                         {
                             string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                             var receivedObject = JsonConvert.DeserializeObject<GameActionDTO>(receivedData);
