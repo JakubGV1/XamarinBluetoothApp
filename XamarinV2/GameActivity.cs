@@ -62,6 +62,10 @@ namespace XamarinV2
         private Ship _currentShip;
         private static bool isOtherPlayerReady;
 
+        private TableLayout myTableLayout;
+        private TableLayout opponentTableLayout;
+
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -69,54 +73,33 @@ namespace XamarinV2
 
             _activity = this;
 
-            TableLayout opponentTableLayout = FindViewById<TableLayout>(Resource.Id.OpponentTableLayout);
-            TableLayout myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
+            opponentTableLayout = FindViewById<TableLayout>(Resource.Id.OpponentTableLayout);
+            myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
             ownTable = FindViewById<TextView>(Resource.Id.ownTable);    
             isActionPerformed = false;
            
             InitializeConfig();
-
-            //RandomShipPlacement();
-            //CreateSmallerTable(myTableLayout);
-            //CreateOpponentTable(opponentTableLayout);
             _turnText = FindViewById<TextView>(Resource.Id.turnText);
 
-/*
-            string connectedDevice = Intent.GetStringExtra("Connected-Device");
-            if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
-            {
-                if (connectedDevice == "Host")
-                {
-                    playerState = PlayerState.Turn;
-                   // _turnText.Text = $"Your turn";
-                }
-                else
-                {
-                    playerState = PlayerState.Waiting;
-                   // _turnText.Text = $"Opponent turn";
-                }
-                _gamestate = GameState.PlanningPhase;
-                CreatePlanningTable(opponentTableLayout);
-                _turnText.Text = $"Faza planowania";
-                _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
-                Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
-                Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
+                        string connectedDevice = Intent.GetStringExtra("Connected-Device");
+                        if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
+                        {
+                            if (connectedDevice == "Host")
+                            {
+                                playerState = PlayerState.Turn;          
+                            }
+                            else
+                            {
+                                playerState = PlayerState.Waiting; 
+                            }
+                            _gamestate = GameState.PlanningPhase;
+                            CreatePlanningTable(opponentTableLayout);
+                            _turnText.Text = $"Faza planowania";
+                            _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
+                            Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
+                            Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
 
-            }*/
-
-            //test?
-            _turnText.Text = $"Faza planowania";
-            _gamestate = GameState.PlanningPhase;
-            CreatePlanningTable(opponentTableLayout);
-            /* ship1 = FindViewById<ImageView>(Resource.Id.ship1);
-             ship1.Click += (sender, e) =>
-             {
-
-             };*/
-
-            //ship2 = FindViewById<ImageView>(Resource.Id.ship2);
-            // ship3 = FindViewById<ImageView>(Resource.Id.ship3);
-
+                        }
         }
         private void InitializeConfig()
         {
@@ -128,7 +111,6 @@ namespace XamarinV2
             shipsToPlace.Add(1, 2);
             shipsToPlace.Add(2, 1);
             shipsToPlace.Add(3, 1);
-            //shipsToPlace.Add(4, 1);
             ownTable.Text = "Wybierz statek";
             ship1 = FindViewById<ImageView>(Resource.Id.ship1View);
             ship2 = FindViewById<ImageView>(Resource.Id.ship2View);
@@ -169,46 +151,6 @@ namespace XamarinV2
             ShipSelected = index;
             _currentShipSize = 0;
         }
-
-
-        private void CreateSmallerTable(TableLayout myTableLayout)
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                TableRow tableRow = new TableRow(this);
-                for (int j = 0; j < 5; j++)
-                {
-                    TextView textView = new TextView(this);
-                    /*textView.Text = $"Cell {i * 6 + j + 1}";*/
-                    textView.Gravity = GravityFlags.Center;
-                    if (ShipLocation[i, j] == 1)
-                    {
-                        textView.SetBackgroundResource(Resource.Drawable.cell_border_ownship);
-                    }
-                    else
-                    {
-                        textView.SetBackgroundResource(Resource.Drawable.cell_border);
-                    }
-
-                    // Set padding to add spacing between cells
-                    int padding = 5; // Set your desired padding
-                    textView.SetPadding(padding, padding, padding, padding);
-
-                    TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
-                    layoutParams.Width = 100; // Set your desired width
-                    layoutParams.Height = 100; // Set your desired height
-                    layoutParams.SetMargins(padding, padding, padding, padding);
-                    textView.LayoutParameters = layoutParams;
-
-                    myTextViews[i, j] = textView;
-                    tableRow.AddView(textView);
-                }
-
-                myTableLayout.AddView(tableRow);
-            }
-        }
-
-
 
         private bool ArePositionsAvailable(int finalI, int finalJ, int size)
         {
@@ -311,9 +253,72 @@ namespace XamarinV2
             bool allShipPlaced = shipsToPlace.Values.All(value => value == 0);
             if (allShipPlaced)
             {
+                GameActionDTO gameAction = new GameActionDTO
+                {
+                    row = 0,
+                    column = 0,
+                    gameState = GameState.PlayingPhase,
+                    gameAction = GameAction.PlayerAction,
+                };
+                SendGameData(gameAction);
                 ShipsView.Visibility = ViewStates.Gone;
                 if (!isOtherPlayerReady) _turnText.Text = $"Faza planowania (oczekiwanie na drugiego gracza)";
-                //else start?-> ShowGameView();
+                else ShowGameView();
+            }
+        }
+
+        private void ShowGameView()
+        {
+            _gamestate = GameState.PlayingPhase;
+            ownTable.Text = "Twoja tabela";
+            myTableLayout.RemoveAllViews();
+            opponentTableLayout.RemoveAllViews();
+            CreateSmallerTable();
+            CreateOpponentTable();
+            if(playerState == PlayerState.Turn)
+            {
+                _turnText.Text = $"Twoja tura";
+            } else
+            {
+                _turnText.Text = $"Tura przeciwnika";
+            }
+        }
+
+        private void CreateSmallerTable()
+        {
+            
+            for (int i = 0; i < 5; i++)
+            {
+                TableRow tableRow = new TableRow(this);
+                for (int j = 0; j < 5; j++)
+                {
+                    TextView textView = new TextView(this);
+                    textView.Gravity = GravityFlags.Center;
+                
+                    if (PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == i && pos.y == j)))
+                    {
+                        textView.SetBackgroundResource(Resource.Drawable.cellShooted);
+                    }
+                    else
+                    {
+                        textView.SetBackgroundResource(Resource.Drawable.cell_border);
+                    }
+
+                    // Set padding to add spacing between cells
+                    int padding = 5; // Set your desired padding
+                    textView.SetPadding(padding, padding, padding, padding);
+
+                    TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
+                    layoutParams.Width = 100; // Set your desired width
+                    layoutParams.Height = 100; // Set your desired height
+                    layoutParams.SetMargins(padding, padding, padding, padding);
+                    textView.LayoutParameters = layoutParams;
+
+                    myTextViews[i, j] = textView;
+                    tableRow.AddView(textView);
+                }
+
+                myTableLayout.AddView(tableRow);
             }
         }
 
@@ -386,10 +391,9 @@ namespace XamarinV2
                 {
                     if (shipsToPlace.ContainsKey(ShipSelected) && shipsToPlace[ShipSelected] > 0)
                     {
-                        System.Diagnostics.Debug.WriteLine("Ship-1.");
 
                         if (ArePositionsAvailable(finalI, finalJ, _currentShip.Size)){
-                            System.Diagnostics.Debug.WriteLine("Inside xx?.");
+                          //  System.Diagnostics.Debug.WriteLine("Inside xx?.");
                             _currentShipSize = _currentShip.Size-1;
                             Positions newPosition = new Positions { x = finalI, y = finalJ };
                             Ship newShip = new Ship(_currentShip.Size);
@@ -452,7 +456,7 @@ namespace XamarinV2
         }
 
 
-        private void CreateOpponentTable(TableLayout opponentTableLayout)
+        private void CreateOpponentTable()
         {
             for (int i = 0; i < 5; i++)
             {
@@ -571,7 +575,9 @@ namespace XamarinV2
 
         private bool CheckField(Context context, int row, int column)
         {
-            if (ShipLocation[row,column] != 1)
+            //ShipLocation[row,column]
+
+            if (!PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == row && pos.y == column)))
             {
                 ((Activity)context).RunOnUiThread(() =>
                 {
@@ -587,6 +593,14 @@ namespace XamarinV2
                 {
                     if (myTextViews[row, column].Text != "X")
                     {
+                        foreach (Ship ship in PlayerShips)
+                        {
+                            Positions hitPosition = ship.positions.FirstOrDefault(pos => pos.x == row && pos.y == column);
+                            if (hitPosition != null)
+                            {
+                                hitPosition.isHit = true;
+                            }
+                        }
                         myTextViews[row, column].SetBackgroundResource(Resource.Drawable.cellShooted);
                         myTextViews[row, column].Text = "X";
                     }
@@ -615,6 +629,14 @@ namespace XamarinV2
                 }
             });      
         }
+
+
+        private void OtherPlayerReady(Context context)
+        {
+            isOtherPlayerReady = true;
+            HideShipGroupAndGetReady();
+        }
+
 
         public override void OnBackPressed()
         {
@@ -679,7 +701,7 @@ namespace XamarinV2
     
         private void SendGameData(GameActionDTO gameActionDTO)
         {
-            if (_connectedSocket != null && playerState == PlayerState.Turn)
+            if (_connectedSocket != null && (playerState == PlayerState.Turn || _gamestate == GameState.PlanningPhase))
             {
                 try
                 {
@@ -754,6 +776,9 @@ namespace XamarinV2
                                 } else if(receivedObject.gameAction == GameAction.Callback)
                                 {
                                     UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
+                                } else if(receivedObject.gameAction == GameAction.PlayerAction)
+                                {
+                                    OtherPlayerReady(context);
                                 }
                             }
 
@@ -767,13 +792,12 @@ namespace XamarinV2
                 }
                 catch (Java.IO.IOException e)
                 {
-                    //Log.Error("SocketError", "Error handling socket input: " + e.Message);
+                   // Log.Error("SocketError", "Error handling socket input: " + e.Message);
                     CloseBluetoothSocket();
                     isConnection = false;
                     ((Activity)context).RunOnUiThread(() =>
                     {
                         Toast.MakeText(context, "Socket disconnected", ToastLength.Short).Show();
-
                         Intent intent = new Intent(context, typeof(DiscoveredDevicesActivity));
 
                         // Set the flags to clear the activity stack
