@@ -6,5 +6,6 @@
 	<string name="options">Opcje</string>
 	<string name="back_button">Wróć</string>
 	<string name="scan_button">Skanuj</string>
-	<string name="host_button">Hostuj</string>
+	<string name="host_button">Hostuj</string>	
+	<string name="ownTable">Twoja tabela</string>
 </resources>

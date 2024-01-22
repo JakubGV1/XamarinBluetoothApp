@@ -33,10 +33,18 @@ namespace XamarinV2
     {
        
         static TextView[,] textViews = new TextView[5, 5];
-        static TextView[,] myTextViews = new TextView[5, 5]; 
+        static TextView[,] myTextViews = new TextView[5, 5];
+        static TextView ownTable;
         private ImageView ship1;
         private ImageView ship2;
         private ImageView ship3;
+
+        private TextView ship1Text;
+        private TextView ship2Text;
+        private TextView ship3Text;
+
+        private LinearLayout ShipsView;
+
         private static TextView _turnText;
         private static BluetoothSocket _connectedSocket;
         private static GameActivity _activity;
@@ -52,7 +60,7 @@ namespace XamarinV2
         private int _currentShipSize;
         private int gridSize = 5;
         private Ship _currentShip;
-
+        private static bool isOtherPlayerReady;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -63,7 +71,7 @@ namespace XamarinV2
 
             TableLayout opponentTableLayout = FindViewById<TableLayout>(Resource.Id.OpponentTableLayout);
             TableLayout myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
-
+            ownTable = FindViewById<TextView>(Resource.Id.ownTable);    
             isActionPerformed = false;
            
             InitializeConfig();
@@ -112,6 +120,7 @@ namespace XamarinV2
         }
         private void InitializeConfig()
         {
+            isOtherPlayerReady = false;
             _currentShipSize = 0;
             ShipLocation = new int[5, 5];
             shipsToPlace = new Dictionary<int, int>();
@@ -119,12 +128,48 @@ namespace XamarinV2
             shipsToPlace.Add(1, 2);
             shipsToPlace.Add(2, 1);
             shipsToPlace.Add(3, 1);
-            shipsToPlace.Add(4, 1);
-            // Ship shipKey = new Ship(1);
+            //shipsToPlace.Add(4, 1);
+            ownTable.Text = "Wybierz statek";
+            ship1 = FindViewById<ImageView>(Resource.Id.ship1View);
+            ship2 = FindViewById<ImageView>(Resource.Id.ship2View);
+            ship3 = FindViewById<ImageView>(Resource.Id.ship3View);
 
-            ShipSelected = 4;
-            _currentShip = new Ship(4);
+            ship1.Click += (sender, e) =>
+            {
+                if (ShipSelected != 0 && _currentShip != null && shipsToPlace[1] == 0) return;
+                SelectShip(1, new Ship(1));
+            };
+
+            ship2.Click += (sender, e) =>
+            {
+                if (ShipSelected != 0 && _currentShip != null && shipsToPlace[2] == 0) return;
+                SelectShip(2, new Ship(2));
+            };
+
+            ship3.Click += (sender, e) =>
+            {
+                if (ShipSelected != 0 && _currentShip != null && shipsToPlace[3] == 0) return;
+                SelectShip(3, new Ship(3));
+            };
+
+            ship1Text = FindViewById<TextView>(Resource.Id.textView);
+            ship2Text = FindViewById<TextView>(Resource.Id.textView2);
+            ship3Text = FindViewById<TextView>(Resource.Id.textView3);
+
+            ship1Text.Text = $"Posiadasz {shipsToPlace[1]}";
+            ship2Text.Text = $"Posiadasz {shipsToPlace[2]}";
+            ship3Text.Text = $"Posiadasz {shipsToPlace[3]}";
+            ShipsView = FindViewById<LinearLayout>(Resource.Id.groupShip);
+            //ReadyButton
         }
+
+        private void SelectShip(int index, Ship ship)
+        {
+            _currentShip = ship;
+            ShipSelected = index;
+            _currentShipSize = 0;
+        }
+
 
         private void CreateSmallerTable(TableLayout myTableLayout)
         {
@@ -238,7 +283,7 @@ namespace XamarinV2
                         }
                     }
                 }
-                else if (isVertical && horizontalValid)
+                if (isVertical && horizontalValid)
                 {
                     if (_currentShip.positions.Count > 1)
                     {
@@ -259,6 +304,33 @@ namespace XamarinV2
             }
 
             return true;
+        }
+
+        private void HideShipGroupAndGetReady()
+        {
+            bool allShipPlaced = shipsToPlace.Values.All(value => value == 0);
+            if (allShipPlaced)
+            {
+                ShipsView.Visibility = ViewStates.Gone;
+                if (!isOtherPlayerReady) _turnText.Text = $"Faza planowania (oczekiwanie na drugiego gracza)";
+                //else start?-> ShowGameView();
+            }
+        }
+
+        private void SwitchText(int index)
+        {
+            switch (index)
+            {
+                case 1:
+                    ship1Text.Text = $"Posiadasz {shipsToPlace[index]}";
+                    break;
+                case 2:
+                    ship2Text.Text = $"Posiadasz {shipsToPlace[index]}";
+                    break;
+                case 3:
+                    ship3Text.Text = $"Posiadasz {shipsToPlace[index]}";
+                    break;
+            }
         }
 
         private void CreatePlanningTable(TableLayout opponentTableLayout)
@@ -305,7 +377,7 @@ namespace XamarinV2
 
         private void PlacementShip(int finalI, int finalJ) 
         {
-            System.Diagnostics.Debug.WriteLine("This is a log message.");
+           
             if (_gamestate == GameState.PlanningPhase)
             {
                 if (ShipSelected == 0) return;
@@ -328,9 +400,12 @@ namespace XamarinV2
 
                             if (_currentShipSize == 0)
                             {
+                                
                                 shipsToPlace[ShipSelected]--;
+                                SwitchText(ShipSelected);
                                 ShipSelected = 0;
                                 _currentShip = null;
+                                HideShipGroupAndGetReady();
                             }
 
                         } else
@@ -355,11 +430,14 @@ namespace XamarinV2
 
   
                             if (_currentShipSize == 0)
-                        {
-
-                            shipsToPlace[ShipSelected]--;
-                            ShipSelected = 0;
-                        }
+                            {
+                                
+                                shipsToPlace[ShipSelected]--;
+                                SwitchText(ShipSelected);
+                                ShipSelected = 0;
+                                _currentShip = null;
+                                HideShipGroupAndGetReady();
+                            }
                     }
                     else
                     {

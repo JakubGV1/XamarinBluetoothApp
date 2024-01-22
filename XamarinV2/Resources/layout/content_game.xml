@@ -38,12 +38,71 @@
         android:id="@+id/ownTable"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Twoja tabela"
+        android:text="@string/ownTable"
         android:textSize="18sp"
         android:textStyle="bold"
         android:gravity="center"
         android:layout_marginTop="16dp"
         android:layout_below="@+id/actionText"/>
+
+
+     <LinearLayout
+        android:id="@+id/groupShip"
+        android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/ship1View"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/ship1"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Posiadasz 1"
+        android:layout_toEndOf="@id/ship1View"
+        android:layout_marginStart="8dp"
+        android:layout_centerVertical="true"/>
+
+        <ImageView
+        android:id="@+id/ship2View"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:src="@drawable/ship2"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"/>
+
+        <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Posiadasz 2"
+        android:layout_toEndOf="@id/ship2View"
+        android:layout_marginStart="8dp"
+        android:layout_centerVertical="true"/>
+        
+        <ImageView
+        android:id="@+id/ship3View"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:src="@drawable/ship3"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"/>
+
+        <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Posiadasz 1"
+        android:layout_toEndOf="@id/ship3View"
+        android:layout_marginStart="8dp"
+        android:layout_centerVertical="true"/>
+         </LinearLayout>
 
         <TableLayout
         android:id="@+id/OwnTableLayout"
