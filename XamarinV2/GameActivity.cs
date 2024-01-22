@@ -80,8 +80,9 @@ namespace XamarinV2
            
             InitializeConfig();
             _turnText = FindViewById<TextView>(Resource.Id.turnText);
+            CreatePlanningTable(opponentTableLayout);
 
-                        string connectedDevice = Intent.GetStringExtra("Connected-Device");
+            string connectedDevice = Intent.GetStringExtra("Connected-Device");
                         if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
                         {
                             if (connectedDevice == "Host")
@@ -93,14 +94,14 @@ namespace XamarinV2
                                 playerState = PlayerState.Waiting; 
                             }
                             _gamestate = GameState.PlanningPhase;
-                            CreatePlanningTable(opponentTableLayout);
-                            _turnText.Text = $"Faza planowania";
                             _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
                             Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
                             Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
-
                         }
-        }
+            }
+
+
+
         private void InitializeConfig()
         {
             isOtherPlayerReady = false;
@@ -340,6 +341,7 @@ namespace XamarinV2
 
         private void CreatePlanningTable(TableLayout opponentTableLayout)
         {
+            _turnText.Text = $"Faza planowania";
             for (int i = 0; i < 5; i++)
             {
                 TableRow tableRow = new TableRow(this);
