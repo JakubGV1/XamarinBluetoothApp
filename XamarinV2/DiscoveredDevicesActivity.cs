@@ -29,6 +29,8 @@ using Android.Bluetooth.LE;
 using Java.Lang.Reflect;
 using Newtonsoft.Json;
 using Android.App.Admin;
+using XamarinV2.Enums;
+using GameState = XamarinV2.Enums.GameState;
 
 //using static Xamarin.Essentials.Platform;
 
@@ -463,39 +465,4 @@ namespace XamarinV2
         }
     }
 
-    public enum GameState
-    {
-        None,
-        PlanningPhase,
-        PlayingPhase,
-    }
-
-    public enum PlayerState
-    {
-        Turn,
-        Waiting,
-    }
-
-    public class GameActionDTO
-    {
-        public int row = 0;
-        public int column = 0;
-        public GameState gameState;
-        public GameAction gameAction;
-        public bool isShootedCallback = false;
-    }
-
-    public enum GameAction
-    {
-        PlayerAction,
-        Callback,
-        Shot,
-    }
-
-
-    public class GameData
-    {
-        public GameState State;
-        public PlayerState PlayerState;
-    }
 }

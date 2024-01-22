@@ -19,6 +19,9 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
+using XamarinV2.DTO;
+using XamarinV2.Enums;
+using GameState = XamarinV2.Enums.GameState;
 
 
 namespace XamarinV2

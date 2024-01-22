@@ -67,6 +67,11 @@
     <Compile Include="BluetoothReceiver.cs" />
     <Compile Include="CustomBluetooth.cs" />
     <Compile Include="DiscoveredDevicesActivity.cs" />
+    <Compile Include="DTO\GameActionDTO.cs" />
+    <Compile Include="DTO\GameData.cs" />
+    <Compile Include="Enums\GameAction.cs" />
+    <Compile Include="Enums\GameState.cs" />
+    <Compile Include="Enums\PlayerState.cs" />
     <Compile Include="GameActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
