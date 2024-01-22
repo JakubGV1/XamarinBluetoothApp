@@ -20,8 +20,11 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using XamarinV2.DTO;
+using XamarinV2.Entities;
 using XamarinV2.Enums;
+using static Android.InputMethodServices.Keyboard;
 using GameState = XamarinV2.Enums.GameState;
+using System.Diagnostics;
 
 
 namespace XamarinV2
@@ -30,7 +33,6 @@ namespace XamarinV2
     public class GameActivity : AppCompatActivity
     {
        
-        private float dX, dY;
         static TextView[,] textViews = new TextView[5, 5];
         static TextView[,] myTextViews = new TextView[5, 5]; 
         private ImageView ship1;
@@ -42,8 +44,15 @@ namespace XamarinV2
         private static int[,] ShipLocation;
         // turn?
         private static PlayerState playerState;
+        private static GameState _gamestate;
         private static bool isActionPerformed;
         private static readonly Random random = new Random();
+        private Dictionary<Ship, int> shipsToPlace;
+        private Ship ShipSelected;
+        private List<Ship> PlayerShips;
+        private int _currentShipSize;
+        private int gridSize = 5;
+        private Ship _currentShip;
 
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -51,18 +60,74 @@ namespace XamarinV2
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.content_game);
 
-                _activity = this;
+            _activity = this;
 
-                TableLayout opponentTableLayout = FindViewById<TableLayout>(Resource.Id.OpponentTableLayout);
-                TableLayout myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
-            
-            
-            
-            ShipLocation = new int[5, 5];
-            RandomShipPlacement();
+            TableLayout opponentTableLayout = FindViewById<TableLayout>(Resource.Id.OpponentTableLayout);
+            TableLayout myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
+
             isActionPerformed = false;
+           
+            InitializeConfig();
 
-            for (int i=0; i < 5; i++)
+            //RandomShipPlacement();
+            //CreateSmallerTable(myTableLayout);
+            //CreateOpponentTable(opponentTableLayout);
+            _turnText = FindViewById<TextView>(Resource.Id.turnText);
+
+/*
+            string connectedDevice = Intent.GetStringExtra("Connected-Device");
+            if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
+            {
+                if (connectedDevice == "Host")
+                {
+                    playerState = PlayerState.Turn;
+                   // _turnText.Text = $"Your turn";
+                }
+                else
+                {
+                    playerState = PlayerState.Waiting;
+                   // _turnText.Text = $"Opponent turn";
+                }
+                _gamestate = GameState.PlanningPhase;
+                CreatePlanningTable(opponentTableLayout);
+                _turnText.Text = $"Faza planowania";
+                _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
+                Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
+                Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
+
+            }*/
+
+            //test?
+            _turnText.Text = $"Faza planowania";
+            _gamestate = GameState.PlanningPhase;
+            CreatePlanningTable(opponentTableLayout);
+            /* ship1 = FindViewById<ImageView>(Resource.Id.ship1);
+             ship1.Click += (sender, e) =>
+             {
+
+             };*/
+
+            //ship2 = FindViewById<ImageView>(Resource.Id.ship2);
+            // ship3 = FindViewById<ImageView>(Resource.Id.ship3);
+
+        }
+        private void InitializeConfig()
+        {
+            _currentShipSize = 0;
+            ShipLocation = new int[5, 5];
+            _currentShip = null;
+            shipsToPlace = new Dictionary<Ship, int>();
+            PlayerShips = new List<Ship>();
+            shipsToPlace.Add(new Ship(1), 2);
+            shipsToPlace.Add(new Ship(2), 1);
+            Ship shipKey = new Ship(1);
+
+            ShipSelected = shipKey;
+        }
+
+        private void CreateSmallerTable(TableLayout myTableLayout)
+        {
+            for (int i = 0; i < 5; i++)
             {
                 TableRow tableRow = new TableRow(this);
                 for (int j = 0; j < 5; j++)
@@ -73,7 +138,8 @@ namespace XamarinV2
                     if (ShipLocation[i, j] == 1)
                     {
                         textView.SetBackgroundResource(Resource.Drawable.cell_border_ownship);
-                    } else
+                    }
+                    else
                     {
                         textView.SetBackgroundResource(Resource.Drawable.cell_border);
                     }
@@ -94,10 +160,51 @@ namespace XamarinV2
 
                 myTableLayout.AddView(tableRow);
             }
+        }
 
 
+        private bool ArePositionsAvailable(int finalI, int finalJ, int size)
+        {
+            // Check if there is any possible way to place a ship of the given size
+            for (int i = 0; i < size; i++)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    int currentX = finalI + i;
+                    int currentY = finalJ + j;
 
+                    if (currentX >= 0 && currentX < gridSize && currentY >= 0 && currentY < gridSize)
+                    {
+                        // Check if the position is occupied by another ship
+                        if (PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == currentX && pos.y == currentY)))
+                        {
+                            return false;
+                        }
+                        // Check if the position is adjacent to an already placed segment in _currentShip
+                        if (_currentShip != null && !_currentShip.positions.Any(pos =>
+                            (Math.Abs(pos.x - currentX) == 1 && pos.y == currentY) ||
+                            (Math.Abs(pos.y - currentY) == 1 && pos.x == currentX) ||
+                            (pos.x == currentX && pos.y == currentY + 1) ||  // Check for adjacent position below
+                            (pos.x == currentX && pos.y == currentY - 1) ||  // Check for adjacent position above
+                            (pos.x == currentX + 1 && pos.y == currentY) ||  // Check for adjacent position to the right
+                            (pos.x == currentX - 1 && pos.y == currentY)))    // Check for adjacent position to the left
+                        {
+                            return false;
+                        }
 
+                    }
+                    else
+                    {
+                        // Position is out of bounds
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void CreatePlanningTable(TableLayout opponentTableLayout)
+        {
             for (int i = 0; i < 5; i++)
             {
                 TableRow tableRow = new TableRow(this);
@@ -105,7 +212,120 @@ namespace XamarinV2
                 for (int j = 0; j < 5; j++)
                 {
                     TextView textView = new TextView(this);
-                   // textView.Text = $"Cell {i * 6 + j + 1}";
+                    // textView.Text = $"Cell {i * 6 + j + 1}";
+                    textView.Gravity = GravityFlags.Center;
+
+                    // Set the background drawable for the border
+                    textView.SetBackgroundResource(Resource.Drawable.cell_border);
+
+                    // Set padding to add spacing between cells
+                    int padding = 5; // Set your desired padding
+                    textView.SetPadding(padding, padding, padding, padding);
+
+                    TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
+                    layoutParams.Width = 150; // Set your desired width
+                    layoutParams.Height = 150; // Set your desired height
+                    layoutParams.SetMargins(padding, padding, padding, padding);
+                    textView.LayoutParameters = layoutParams;
+
+                    textViews[i, j] = textView;
+                    int finalI = i;
+                    int finalJ = j;
+
+                    textView.Click += (sender, e) =>
+                    {
+                        PlacementShip(finalI, finalJ);
+                    };
+
+                    tableRow.AddView(textView);
+                }
+
+                opponentTableLayout.AddView(tableRow);
+            }
+        }
+
+
+        private void PlacementShip(int finalI, int finalJ) 
+        {
+            System.Diagnostics.Debug.WriteLine("This is a log message.");
+            if (_gamestate == GameState.PlanningPhase)
+            {
+                if (ShipSelected == null) return;
+
+                if(_currentShipSize == 0)
+                {
+                    if (shipsToPlace.ContainsKey(ShipSelected) && shipsToPlace[ShipSelected] > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Ship-1.");
+
+                        if (ArePositionsAvailable(finalI, finalJ, ShipSelected.Size)){
+                            System.Diagnostics.Debug.WriteLine("Inside xx?.");
+                            _currentShipSize = ShipSelected.Size-1;
+                            Positions newPosition = new Positions { x = finalI, y = finalJ };
+                            Ship newShip = new Ship(ShipSelected.Size);
+                            newShip.positions.Add(newPosition);
+                            _currentShip = newShip;
+                            PlayerShips.Add(newShip);
+                            myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cell_border_ownship);
+
+                            if (_currentShipSize == 0)
+                            {
+                                shipsToPlace[ShipSelected]--;
+                                ShipSelected = null;
+                                _currentShip = null;
+                            }
+
+                        } else
+                        {
+                            RunOnUiThread(() =>
+                            {
+                                Toast.MakeText(this, "Nie można tutaj postawić statku", ToastLength.Short).Show();
+                            });
+                        }
+                    }
+                } else
+                {
+                    Ship existingShip = PlayerShips.Find(ship => ship == _currentShip);
+                    if (existingShip != null && shipsToPlace.ContainsKey(ShipSelected) && shipsToPlace[ShipSelected] > 0) {
+                    if (ArePositionsAvailable(finalI, finalJ, _currentShipSize))
+                    {
+                        Positions newPosition = new Positions { x = finalI, y = finalJ };
+                        _currentShip.positions.Add(newPosition);
+                        _currentShipSize--;
+                        existingShip.positions.Add(newPosition);
+                        myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cell_border_ownship);
+
+  
+                            if (_currentShipSize == 0)
+                        {
+
+                            shipsToPlace[ShipSelected]--;
+                            ShipSelected = null;
+                        }
+                    }
+                    else
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            Toast.MakeText(this, "Nie można tutaj postawić kolejnego segmentu statku", ToastLength.Short).Show();
+                        });
+                    }
+                    }
+                }
+            }
+        }
+
+
+        private void CreateOpponentTable(TableLayout opponentTableLayout)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                TableRow tableRow = new TableRow(this);
+
+                for (int j = 0; j < 5; j++)
+                {
+                    TextView textView = new TextView(this);
+                    // textView.Text = $"Cell {i * 6 + j + 1}";
                     textView.Gravity = GravityFlags.Center;
 
                     // Set the background drawable for the border
@@ -135,35 +355,9 @@ namespace XamarinV2
 
                 opponentTableLayout.AddView(tableRow);
             }
-
-/*          ship1 = FindViewById<ImageView>(Resource.Id.ship1);
-            ship2 = FindViewById<ImageView>(Resource.Id.ship2);
-            ship3 = FindViewById<ImageView>(Resource.Id.ship3);*/
-            _turnText = FindViewById<TextView>(Resource.Id.turnText);
-
-            string connectedDevice = Intent.GetStringExtra("Connected-Device");
-
-            if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice!=null)
-            {
-                if(connectedDevice == "Host")
-                {
-                    playerState = PlayerState.Turn;
-                    _turnText.Text = $"Your turn";
-                } else
-                {
-                    playerState = PlayerState.Waiting;
-                    _turnText.Text = $"Opponent turn";
-                }
-                _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
-
-                Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
-
-                Toast.MakeText(this, "Udalo sie polaczyc z socketem w nowej aktywnosci", ToastLength.Short).Show();
-            }
         }
 
 
-       
 
         private void RandomShipPlacement()
         {

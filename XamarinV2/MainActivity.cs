@@ -71,9 +71,10 @@ namespace XamarinV2
                 SetupBluetooth();
             }
             // _bluetoothAdapter.StartDiscovery();
-               var intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+              // var intent = new Intent(this, typeof(DiscoveredDevicesActivity));
             //var intent = new Intent(this, typeof(GameActivity));
-            intent.PutExtra("Game", "Quiz");
+           // intent.PutExtra("Game", "Quiz");
+            var intent = new Intent(this, typeof(GameActivity));
             StartActivity(intent);
 
         }
