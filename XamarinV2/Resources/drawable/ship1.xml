@@ -1,0 +1,11 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+	<!-- Set the color for Ship 1 (1 square) -->
+	<solid android:color="#FF0000" />
+
+	<!-- Set the size for Ship 1 (1 square) -->
+	<size
+        android:width="50dp"
+        android:height="50dp" />
+</shape>

@@ -1,0 +1,12 @@
+<!-- res/drawable/ship3.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+	<!-- Set the color for Ship 3 (3 squares) -->
+	<solid android:color="#0000FF" />
+
+	<!-- Set the size for Ship 3 (3 squares) -->
+	<size
+        android:width="150dp"
+        android:height="50dp" />
+</shape>

@@ -1,0 +1,12 @@
+<!-- res/drawable/ship2.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+	<!-- Set the color for Ship 2 (2 squares) -->
+	<solid android:color="#00FF00" />
+
+	<!-- Set the size for Ship 2 (2 squares) -->
+	<size
+        android:width="100dp"
+        android:height="50dp" />
+</shape>
