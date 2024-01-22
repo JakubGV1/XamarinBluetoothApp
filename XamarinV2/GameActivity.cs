@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using XamarinV2.DTO;
 using XamarinV2.Entities;
 using XamarinV2.Enums;
-using static Android.InputMethodServices.Keyboard;
 using GameState = XamarinV2.Enums.GameState;
 using System.Diagnostics;
 
@@ -47,8 +46,8 @@ namespace XamarinV2
         private static GameState _gamestate;
         private static bool isActionPerformed;
         private static readonly Random random = new Random();
-        private Dictionary<Ship, int> shipsToPlace;
-        private Ship ShipSelected;
+        private Dictionary<int, int> shipsToPlace;
+        private int ShipSelected;
         private List<Ship> PlayerShips;
         private int _currentShipSize;
         private int gridSize = 5;
@@ -115,14 +114,16 @@ namespace XamarinV2
         {
             _currentShipSize = 0;
             ShipLocation = new int[5, 5];
-            _currentShip = null;
-            shipsToPlace = new Dictionary<Ship, int>();
+            shipsToPlace = new Dictionary<int, int>();
             PlayerShips = new List<Ship>();
-            shipsToPlace.Add(new Ship(1), 2);
-            shipsToPlace.Add(new Ship(2), 1);
-            Ship shipKey = new Ship(1);
+            shipsToPlace.Add(1, 2);
+            shipsToPlace.Add(2, 1);
+            shipsToPlace.Add(3, 1);
+            shipsToPlace.Add(4, 1);
+            // Ship shipKey = new Ship(1);
 
-            ShipSelected = shipKey;
+            ShipSelected = 4;
+            _currentShip = new Ship(4);
         }
 
         private void CreateSmallerTable(TableLayout myTableLayout)
@@ -163,43 +164,100 @@ namespace XamarinV2
         }
 
 
+
         private bool ArePositionsAvailable(int finalI, int finalJ, int size)
         {
-            // Check if there is any possible way to place a ship of the given size
+            bool horizontalValid = true;
+            bool verticalValid = true;
+
             for (int i = 0; i < size; i++)
             {
-                for (int j = 0; j < size; j++)
+                int currentX = finalI + i;
+                int currentY = finalJ;
+
+                if (currentX < 0 || currentX >= gridSize || currentY < 0 || currentY >= gridSize)
                 {
-                    int currentX = finalI + i;
-                    int currentY = finalJ + j;
+                    // Horizontal position is out of bounds
+                    horizontalValid = false;
+                }
 
-                    if (currentX >= 0 && currentX < gridSize && currentY >= 0 && currentY < gridSize)
-                    {
-                        // Check if the position is occupied by another ship
-                        if (PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == currentX && pos.y == currentY)))
-                        {
-                            return false;
-                        }
-                        // Check if the position is adjacent to an already placed segment in _currentShip
-                        if (_currentShip != null && !_currentShip.positions.Any(pos =>
-                            (Math.Abs(pos.x - currentX) == 1 && pos.y == currentY) ||
-                            (Math.Abs(pos.y - currentY) == 1 && pos.x == currentX) ||
-                            (pos.x == currentX && pos.y == currentY + 1) ||  // Check for adjacent position below
-                            (pos.x == currentX && pos.y == currentY - 1) ||  // Check for adjacent position above
-                            (pos.x == currentX + 1 && pos.y == currentY) ||  // Check for adjacent position to the right
-                            (pos.x == currentX - 1 && pos.y == currentY)))    // Check for adjacent position to the left
-                        {
-                            return false;
-                        }
+                currentX = finalI;
+                currentY = finalJ + i;
 
-                    }
-                    else
-                    {
-                        // Position is out of bounds
-                        return false;
-                    }
+                if (currentX < 0 || currentX >= gridSize || currentY < 0 || currentY >= gridSize)
+                {
+                    // Vertical position is out of bounds
+                    verticalValid = false;
+                }
+
+                // Check if the position is occupied by another ship
+                if (horizontalValid && PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == currentX && pos.y == currentY)))
+                {
+                    return false;
+                }
+
+                // Reset validity for the next iteration
+
+                if (verticalValid && PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == currentX && pos.y == currentY)))
+                {
+                    return false;
+                }
+
+                // Reset validity for the next iteration
+            }
+
+            if (_currentShip.positions.Count == 0)
+            {
+                if (horizontalValid || verticalValid)
+                {
+                    return true;
                 }
             }
+
+             bool isHorizontal = _currentShip.positions.All(pos => pos.x == _currentShip.positions.First().x);
+             bool isVertical = _currentShip.positions.All(pos => pos.y == _currentShip.positions.First().y);
+
+            if (_currentShip.positions.Count > 0)
+            {
+                Positions lastSegment = _currentShip.positions.Last();
+                Positions firstFragment = _currentShip.positions.First();
+
+                if (isHorizontal && verticalValid)
+                {
+                    if(_currentShip.positions.Count > 1)
+                    {
+                        if ((lastSegment.x == finalI && Math.Abs(lastSegment.y - finalJ) == 1) && firstFragment.x == finalI)
+                        {
+                            return true;
+                        }
+                    } else
+                    {
+                        if (lastSegment.x == finalI && Math.Abs(lastSegment.y - finalJ) == 1)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (isVertical && horizontalValid)
+                {
+                    if (_currentShip.positions.Count > 1)
+                    {
+                        if ((lastSegment.y == finalJ && Math.Abs(lastSegment.x - finalI) == 1) && firstFragment.y == finalJ)
+                        {
+                            return true;
+                        }
+                    } else
+                    {
+                        if(lastSegment.y == finalJ && Math.Abs(lastSegment.x - finalI)==1)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
             return true;
         }
 
@@ -228,7 +286,7 @@ namespace XamarinV2
                     layoutParams.SetMargins(padding, padding, padding, padding);
                     textView.LayoutParameters = layoutParams;
 
-                    textViews[i, j] = textView;
+                    myTextViews[i, j] = textView;
                     int finalI = i;
                     int finalJ = j;
 
@@ -250,7 +308,7 @@ namespace XamarinV2
             System.Diagnostics.Debug.WriteLine("This is a log message.");
             if (_gamestate == GameState.PlanningPhase)
             {
-                if (ShipSelected == null) return;
+                if (ShipSelected == 0) return;
 
                 if(_currentShipSize == 0)
                 {
@@ -258,20 +316,20 @@ namespace XamarinV2
                     {
                         System.Diagnostics.Debug.WriteLine("Ship-1.");
 
-                        if (ArePositionsAvailable(finalI, finalJ, ShipSelected.Size)){
+                        if (ArePositionsAvailable(finalI, finalJ, _currentShip.Size)){
                             System.Diagnostics.Debug.WriteLine("Inside xx?.");
-                            _currentShipSize = ShipSelected.Size-1;
+                            _currentShipSize = _currentShip.Size-1;
                             Positions newPosition = new Positions { x = finalI, y = finalJ };
-                            Ship newShip = new Ship(ShipSelected.Size);
+                            Ship newShip = new Ship(_currentShip.Size);
                             newShip.positions.Add(newPosition);
                             _currentShip = newShip;
                             PlayerShips.Add(newShip);
-                            myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cell_border_ownship);
+                            myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cellShooted);
 
                             if (_currentShipSize == 0)
                             {
                                 shipsToPlace[ShipSelected]--;
-                                ShipSelected = null;
+                                ShipSelected = 0;
                                 _currentShip = null;
                             }
 
@@ -293,14 +351,14 @@ namespace XamarinV2
                         _currentShip.positions.Add(newPosition);
                         _currentShipSize--;
                         existingShip.positions.Add(newPosition);
-                        myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cell_border_ownship);
+                        myTextViews[finalI, finalJ].SetBackgroundResource(Resource.Drawable.cellShooted);
 
   
                             if (_currentShipSize == 0)
                         {
 
                             shipsToPlace[ShipSelected]--;
-                            ShipSelected = null;
+                            ShipSelected = 0;
                         }
                     }
                     else
