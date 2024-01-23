@@ -58,8 +58,6 @@ namespace XamarinV2 {
 
         public void CloseConnection()
         {
-            lock (lockObject)
-            {
                 try
                 {
                     if (_connectedSocket != null)
@@ -72,24 +70,22 @@ namespace XamarinV2 {
                 {
                     Log.Error("Socket-closing", ex.Message);
                 }
-            }
+            
         }
 
         public void MakeConnection(BluetoothSocket socket, BluetoothDevice device)
         {
-            lock (lockObject)
-            {
+
                 _connectedSocket = socket;
                 _device = device;
-            }
+            
         }
 
         public BluetoothSocket GetConnectedSocket()
         {
-            lock (lockObject)
-            {
+
                 return _connectedSocket;
-            }
+            
         }
 
         public void Dispose()

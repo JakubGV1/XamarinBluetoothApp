@@ -46,7 +46,7 @@ namespace XamarinV2
         private BluetoothReceiver mReceiver;
         public static readonly UUID GameUUID = UUID.FromString("9b406827-5fd0-4046-99ad-060521820fb6");
         private BluetoothServerSocket serverSocket;
-        private bool isClickable;
+        private static bool isClickable;
         private readonly object lockObject = new object();
         private bool isServerRunning;
 
@@ -126,7 +126,7 @@ namespace XamarinV2
                     try
                     {
                         // Handle the click event for the selected device
-                        await HandleDeviceClick(selectedDevice);
+                        HandleDeviceClick(selectedDevice);
                     }
                     finally
                     {
@@ -147,7 +147,7 @@ namespace XamarinV2
         }
 
 
-        private async Task HandleDeviceClick(string selectedDevice)
+        private void HandleDeviceClick(string selectedDevice)
         {
             string[] deviceInfo = selectedDevice.Split('\n');
             string selectedDeviceName = deviceInfo[0];
@@ -180,12 +180,14 @@ namespace XamarinV2
                 // Handle the click event for the selected device
                 //    await ConnectToDevice(this, searchingDevice);
               //  await ConnectToDevice(this, searchingDevice);
-                await Task.Run(async() => { await ConnectToDevice(this, searchingDevice); });
+                ConnectToDevice(this, searchingDevice);
             }
         }
 
-        private async Task ConnectToDevice(Context context, BluetoothDevice device)
+        private static async Task ConnectToDevice(Context context, BluetoothDevice device)
         {
+            await Task.Run(() =>
+            {
                 BluetoothSocket socket = null;
 
                 try
@@ -199,7 +201,7 @@ namespace XamarinV2
                         Toast.MakeText(context, "Connecting...", ToastLength.Short).Show();
                     });
                     isClickable = false;
-                    await socket.ConnectAsync();
+                    socket.Connect();
 
                     if (socket.IsConnected)
                     {
@@ -233,7 +235,7 @@ namespace XamarinV2
                         // Update UI elements or perform UI-related operations here
                         Toast.MakeText(context, "Device is not listining", ToastLength.Short).Show();
                     });
-                // Handle the exception appropriately
+                    // Handle the exception appropriately
                     isClickable = true;
                 }
                 finally
@@ -251,6 +253,7 @@ namespace XamarinV2
                         }
                     }
                 }
+            });
         }
 
         private static void LeadToNewActivity(Context context, string type)
@@ -334,13 +337,11 @@ namespace XamarinV2
 
             Task.Run(() =>
             {
-                lock (lockObject)
-                {
                     try
                     {
                         serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GameUUID);
 
-                        while (isServerRunning)
+                        while (true)
                         {
                             BluetoothSocket socket = serverSocket.Accept();
 
@@ -376,12 +377,12 @@ namespace XamarinV2
                             }
                         }
 
-                        lock (lockObject)
+                     /*   lock (lockObject)
                         {
                             isServerRunning = false;
-                        }
+                        }*/
                     }
-                }
+                
             });
         }
 

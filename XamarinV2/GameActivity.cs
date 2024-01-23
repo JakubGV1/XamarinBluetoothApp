@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using XamarinV2.DTO;
@@ -34,38 +35,38 @@ namespace XamarinV2
         static TextView[,] textViews = new TextView[5, 5];
         static TextView[,] myTextViews = new TextView[5, 5];
         static TextView ownTable;
-        private ImageView ship1;
-        private ImageView ship2;
-        private ImageView ship3;
+        private  ImageView ship1;
+        private  ImageView ship2;
+        private  ImageView ship3;
 
-        private TextView ship1Text;
-        private TextView ship2Text;
-        private TextView ship3Text;
+        private  TextView ship1Text;
+        private  TextView ship2Text;
+        private  TextView ship3Text;
 
-        private LinearLayout ShipsView;
+        private  LinearLayout ShipsView;
 
-        private static TextView _turnText;
-        private static BluetoothSocket _connectedSocket;
-        private static GameActivity _activity;
-        private static int[,] ShipLocation;
+        private  static TextView _turnText;
+        private  static BluetoothSocket _connectedSocket;
+        private  static GameActivity _activity;
+        private  int[,] ShipLocation;
         // turn?
         private static PlayerState playerState;
         private static GameState _gamestate;
         private static bool isActionPerformed;
         private static readonly Random random = new Random();
-        private Dictionary<int, int> shipsToPlace;
-        private int ShipSelected;
-        private List<Ship> PlayerShips;
+        private static Dictionary<int, int> shipsToPlace;
+        private static int ShipSelected;
+        private static List<Ship> PlayerShips;
         private int _currentShipSize;
         private int gridSize = 5;
         private Ship _currentShip;
-        private static bool isOtherPlayerReady;
+        private bool isOtherPlayerReady;
 
-        private TableLayout myTableLayout;
-        private TableLayout opponentTableLayout;
+        private static TableLayout myTableLayout;
+        private static TableLayout opponentTableLayout;
 
 
-        protected override void OnCreate(Bundle savedInstanceState)
+        protected override async void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.content_game);
@@ -77,9 +78,9 @@ namespace XamarinV2
             ownTable = FindViewById<TextView>(Resource.Id.ownTable);    
             isActionPerformed = false;
            
-          //  InitializeConfig();
+            InitializeConfig();
             _turnText = FindViewById<TextView>(Resource.Id.turnText);
-          //  CreatePlanningTable(opponentTableLayout);
+            CreatePlanningTable(opponentTableLayout);
 
             string connectedDevice = Intent.GetStringExtra("Connected-Device");
                         if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
@@ -96,7 +97,7 @@ namespace XamarinV2
                             _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
                             if (_connectedSocket != null && _connectedSocket.IsConnected)
                             {
-                                Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
+                    HandleSocketInput2(this, _connectedSocket);
                                 Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
                             }
                             
@@ -277,8 +278,8 @@ namespace XamarinV2
             ownTable.Text = "Twoja tabela";
             myTableLayout.RemoveAllViews();
             opponentTableLayout.RemoveAllViews();
-            CreateSmallerTable();
-            CreateOpponentTable();
+          //  CreateSmallerTable();
+           // CreateOpponentTable();
             if(playerState == PlayerState.Turn)
             {
                 _turnText.Text = $"Twoja tura";
@@ -578,7 +579,7 @@ namespace XamarinV2
             }
         }
 
-        private bool CheckField(Context context, int row, int column)
+        private static bool CheckField(Context context, int row, int column)
         {
             //ShipLocation[row,column]
 
@@ -615,7 +616,7 @@ namespace XamarinV2
 
 
 
-        private void UpdateFieldCallback(Context context, int row, int column, bool isshooted)
+        private static void UpdateFieldCallback(Context context, int row, int column, bool isshooted)
         {
             ((Activity)context).RunOnUiThread(() =>
             {
@@ -704,7 +705,7 @@ namespace XamarinV2
             }
         }
     
-        private void SendGameData(GameActionDTO gameActionDTO)
+        private static void SendGameData(GameActionDTO gameActionDTO)
         {
             if (_connectedSocket != null && (playerState == PlayerState.Turn || _gamestate == GameState.PlanningPhase))
             {
@@ -730,6 +731,8 @@ namespace XamarinV2
 
         private void HandleSocketInput(Context context, BluetoothSocket socket)
         {
+            Task.Run(() =>
+            {
                 bool isConnection = true;
                 try
                 {
@@ -743,15 +746,15 @@ namespace XamarinV2
                         int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
                         // Handle the read data as needed
                         Array.Clear(buffer, 0, buffer.Length);
-                         if (bytesRead > 0)
+                        if (bytesRead > 0)
                         {
                             string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                             var receivedObject = JsonConvert.DeserializeObject<GameActionDTO>(receivedData);
                             // Process the received data or update UI as needed
 
-                            if(receivedObject != null)
+                            if (receivedObject != null)
                             {
-                                if(receivedObject.gameAction == GameAction.Shot)
+                                if (receivedObject.gameAction == GameAction.Shot)
                                 {
                                     playerState = PlayerState.Turn;
                                     isActionPerformed = false;
@@ -759,7 +762,7 @@ namespace XamarinV2
                                     ((Activity)context).RunOnUiThread(() =>
                                     {
                                         _turnText.Text = "Your turn";
-                                       
+
                                     });
 
                                     bool Checked = CheckField(context, receivedObject.row, receivedObject.column);
@@ -774,32 +777,35 @@ namespace XamarinV2
                                     if (Checked)
                                     {
                                         gameActionCallback.isShootedCallback = true;
-                                    } else
+                                    }
+                                    else
                                     {
                                         gameActionCallback.isShootedCallback = false;
                                     }
 
                                     SendGameData(gameActionCallback);
-                                } else if(receivedObject.gameAction == GameAction.Callback)
+                                }
+                                else if (receivedObject.gameAction == GameAction.Callback)
                                 {
                                     UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
-                                } else if(receivedObject.gameAction == GameAction.PlayerAction)
+                                }
+                                else if (receivedObject.gameAction == GameAction.PlayerAction)
                                 {
                                     OtherPlayerReady(context);
                                 }
                             }
 
-/*
-                            ((Activity)context).RunOnUiThread(() =>
-                            {
-                                Toast.MakeText(context, $"Msg->P_State: {receivedObject.PlayerState} ->G_sState: {receivedObject.State}", ToastLength.Short).Show();
-                            });*/
+                            /*
+                                                        ((Activity)context).RunOnUiThread(() =>
+                                                        {
+                                                            Toast.MakeText(context, $"Msg->P_State: {receivedObject.PlayerState} ->G_sState: {receivedObject.State}", ToastLength.Short).Show();
+                                                        });*/
                         }
                     }
                 }
                 catch (Java.IO.IOException e)
                 {
-                   // Log.Error("SocketError", "Error handling socket input: " + e.Message);
+                    // Log.Error("SocketError", "Error handling socket input: " + e.Message);
                     CloseBluetoothSocket();
                     isConnection = false;
                     ((Activity)context).RunOnUiThread(() =>
@@ -831,6 +837,107 @@ namespace XamarinV2
                         }
                     }
                 }
-        }  
+            });
+        }
+
+
+        private static void HandleSocketInput2(Context context, BluetoothSocket socket)
+        {
+            Task.Run(() =>
+            {
+                bool isConnection = true;
+                try
+                {
+                    // Get the InputStream from the socket for reading data
+                    Stream inputStream = socket.InputStream;
+                    byte[] buffer = new byte[1024]; // Adjust the buffer size as needed
+
+                    while (isConnection)
+                    {
+                        int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                        // Handle the read data as needed
+                        if (bytesRead > 0)
+                        {
+                            string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                            var receivedObject = JsonConvert.DeserializeObject<GameActionDTO>(receivedData);
+                            // Process the received data or update UI as needed
+
+                            if (receivedObject != null)
+                            {
+                                if (receivedObject.gameAction == GameAction.Shot)
+                                {
+                                    playerState = PlayerState.Turn;
+                                    isActionPerformed = false;
+
+                                    ((Activity)context).RunOnUiThread(() =>
+                                    {
+                                        _turnText.Text = "Your turn";
+
+                                    });
+
+                                    bool Checked = CheckField(context, receivedObject.row, receivedObject.column);
+                                    GameActionDTO gameActionCallback = new GameActionDTO
+                                    {
+                                        row = receivedObject.row,
+                                        column = receivedObject.column,
+                                        gameState = GameState.PlayingPhase,
+                                        gameAction = GameAction.Callback,
+                                    };
+
+                                    if (Checked)
+                                    {
+                                        gameActionCallback.isShootedCallback = true;
+                                    }
+                                    else
+                                    {
+                                        gameActionCallback.isShootedCallback = false;
+                                    }
+
+                                    SendGameData(gameActionCallback);
+                                }
+                                else if (receivedObject.gameAction == GameAction.Callback)
+                                {
+                                    UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
+                                }
+                            }
+
+                            /*
+                                                        ((Activity)context).RunOnUiThread(() =>
+                                                        {
+                                                            Toast.MakeText(context, $"Msg->P_State: {receivedObject.PlayerState} ->G_sState: {receivedObject.State}", ToastLength.Short).Show();
+                                                        });*/
+                        }
+                    }
+                }
+                catch (Java.IO.IOException e)
+                {
+                    //Log.Error("SocketError", "Error handling socket input: " + e.Message);
+                    CloseBluetoothSocket();
+                    isConnection = false;
+                    ((Activity)context).RunOnUiThread(() =>
+                    {
+                        Toast.MakeText(context, "Socket disconnected", ToastLength.Short).Show();
+                        _activity.Finish();
+                    });
+                    //  ShowUIElementsAfterDisconnect(context);
+                }
+                finally // new->cleanup?
+                {
+                    // Cleanup actions (e.g., close the socket or release resources)
+                    if (socket != null && socket.IsConnected)
+                    {
+                        try
+                        {
+                            socket.Close();
+                        }
+                        catch (Java.IO.IOException e)
+                        {
+                            Log.Error("SocketError", "Error closing socket: " + e.Message);
+                            // Handle the exception appropriately
+                        }
+                    }
+                }
+            });
+        }
     }
 }
