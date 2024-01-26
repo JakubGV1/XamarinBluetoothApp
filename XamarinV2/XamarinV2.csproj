@@ -69,6 +69,7 @@
     <Compile Include="DiscoveredDevicesActivity.cs" />
     <Compile Include="DTO\GameActionDTO.cs" />
     <Compile Include="DTO\GameData.cs" />
+    <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Ship.cs" />
     <Compile Include="Enums\GameAction.cs" />
     <Compile Include="Enums\GameState.cs" />
