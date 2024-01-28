@@ -16,11 +16,17 @@ namespace XamarinV2
     {
         private Android.Runtime.JavaList<string> _mDeviceList = new Android.Runtime.JavaList<string>();
         private List<BluetoothDevice> _scannedDevices = new List<BluetoothDevice>();
+        //        private DiscoveredDevices2 _activity;
         private DiscoveredDevicesActivity _activity;
 
         public BluetoothReceiver(DiscoveredDevicesActivity activity)
         {
             _activity = activity;
+        }
+
+        public BluetoothReceiver(DiscoveredDevices2 activity)
+        {
+  //         _activity = activity;
         }
 
         public Android.Runtime.JavaList<string> GetDeviceList()
@@ -41,17 +47,12 @@ namespace XamarinV2
         public override void OnReceive(Context context, Intent intent)
         {
             string action = intent.Action;
-            CustomBluetooth customBluetooth = CustomBluetooth.Instance;
             if (BluetoothDevice.ActionFound.Equals(action))
             {
 
-                // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.GetParcelableExtra(BluetoothDevice.ExtraDevice) as BluetoothDevice;
 
-
-                // Add the device name and address to the list
                 string deviceInfo = $"{device.Name}\n{device.Address}";
-                //Check if device is in list & check if got an UUID  && CheckForGameService(device)
 
                 if (!_scannedDevices.Contains(device))
                 {
@@ -72,18 +73,25 @@ namespace XamarinV2
 
                         ((Activity)context).RunOnUiThread(() =>
                         {
-                            /*mArrayAdapter.NotifyDataSetChanged();*/
                             _activity.UpdateArrayAdapater();
                         });
-
                     }
                 }
                 _activity.DiscoveryFinish(context);
             }
-            else if (BluetoothDevice.ActionUuid.Equals(action))
-            {
-                System.Diagnostics.Debug.WriteLine($"Found");
-            }
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

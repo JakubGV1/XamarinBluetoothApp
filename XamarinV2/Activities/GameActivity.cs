@@ -28,7 +28,7 @@ using Java.IO;
 
 namespace XamarinV2
 {
-    [Activity(Label = "BattleShips")]
+    [Activity(Label = "Statki")]
     public class GameActivity : AppCompatActivity
     {
        
@@ -61,6 +61,8 @@ namespace XamarinV2
         private int gridSize = 5;
         private Ship _currentShip;
         private static bool isOtherPlayerReady;
+        private bool isPlayerReady;
+
 
         private TableLayout myTableLayout;
         private TableLayout opponentTableLayout;
@@ -77,34 +79,41 @@ namespace XamarinV2
             myTableLayout = FindViewById<TableLayout>(Resource.Id.OwnTableLayout);
             ownTable = FindViewById<TextView>(Resource.Id.ownTable);    
             isActionPerformed = false;
-           
-           InitializeConfig();
-            _turnText = FindViewById<TextView>(Resource.Id.turnText);
-           CreatePlanningTable(opponentTableLayout);
 
-            string connectedDevice = Intent.GetStringExtra("Connected-Device");
-                        if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
-                        {
-                            if (connectedDevice == "Host")
-                            {
-                                playerState = PlayerState.Turn;          
-                            }
-                            else
-                            {
-                                playerState = PlayerState.Waiting; 
-                            }
-                            _gamestate = GameState.PlanningPhase;
-                            _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
-                            if (_connectedSocket != null && _connectedSocket.IsConnected)
-                            {
-                                isConnection = true;
-                    //Task.Run(() => { HandleSocketInput(this, _connectedSocket); });
-                              Task.Run(() => HandleSocketInput2(this, _connectedSocket));
+            RunOnUiThread(() =>
+            {
+                InitializeConfig();
+                _turnText = FindViewById<TextView>(Resource.Id.turnText);
+                CreatePlanningTable(opponentTableLayout);
+            });
+
+
+          string connectedDevice = Intent.GetStringExtra("Connected-Device");
+            if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
+            {
+                if (connectedDevice == "Host")
+                {
+                    playerState = PlayerState.Turn;
+                }
+                else
+                {
+                    playerState = PlayerState.Waiting;
+                }
+                _gamestate = GameState.PlanningPhase;
+                _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
+                if (_connectedSocket != null && _connectedSocket.IsConnected)
+                {
+                    isConnection = true;
+                    Task.Run(() =>  HandleSocketInput(this, _connectedSocket) );
+                    //Task.Run(() => HandleSocketInput2(this, _connectedSocket));
                     Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
-                            }
-                            
-                        }
+                }
+
+
+
             }
+          //  _gamestate = GameState.PlanningPhase;
+        }
 
 
 
@@ -260,11 +269,12 @@ namespace XamarinV2
             bool allShipPlaced = shipsToPlace.Values.All(value => value == 0);
             if (allShipPlaced)
             {
+                isPlayerReady = true;
                 GameActionDTO gameAction = new GameActionDTO
                 {
                     row = 0,
                     column = 0,
-                    gameState = GameState.PlayingPhase,
+                    gameState = GameState.ReadyToPlay,
                     gameAction = GameAction.PlayerAction,
                 };
                 SendGameData(gameAction);
@@ -274,21 +284,54 @@ namespace XamarinV2
             }
         }
 
+        
+
+
+
         private void ShowGameView()
         {
-            _gamestate = GameState.PlayingPhase;
-            ownTable.Text = "Twoja tabela";
-            myTableLayout.RemoveAllViews();
-            opponentTableLayout.RemoveAllViews();
-            CreateSmallerTable();
-            CreateOpponentTable();
-            if(playerState == PlayerState.Turn)
+
+
+            try
             {
-                _turnText.Text = $"Twoja tura";
-            } else
-            {
-                _turnText.Text = $"Tura przeciwnika";
+                RunOnUiThread(() =>
+                {
+                    ownTable.Text = "Twoja tabela";
+                    myTableLayout.RemoveAllViews();
+                    opponentTableLayout.RemoveAllViews();
+                    CreateSmallerTable();
+                    CreateOpponentTable();
+                    _turnText.Text = $"Twoja tura";
+                    // _gamestate = GameState.PlayingPhase;
+                    if (playerState == PlayerState.Turn)
+                    {
+                        _turnText.Text = $"Twoja tura";
+                    }
+                    else
+                    {
+                        _turnText.Text = $"Tura przeciwnika";
+                    }
+                });
             }
+            catch (Exception ex)
+            {
+                Log.Error("ShowGameView", "Exception: " + ex.Message);
+            }
+            //   _gamestate = GameState.PlayingPhase;
+           // ownTable.Text = "Twoja tabela";
+            // myTableLayout.RemoveAllViews();
+            // opponentTableLayout.RemoveAllViews();
+            /// CreateSmallerTable();
+            // CreateOpponentTable();
+           // _turnText.Text = $"Twoja tura";
+           // _gamestate = GameState.PlayingPhase;
+            /* if(playerState == PlayerState.Turn)
+             {
+                 _turnText.Text = $"Twoja tura";
+             } else
+             {
+                 _turnText.Text = $"Tura przeciwnika";
+             }*/
         }
 
         private void CreateSmallerTable()
@@ -355,19 +398,13 @@ namespace XamarinV2
                 for (int j = 0; j < 5; j++)
                 {
                     TextView textView = new TextView(this);
-                    // textView.Text = $"Cell {i * 6 + j + 1}";
                     textView.Gravity = GravityFlags.Center;
-
-                    // Set the background drawable for the border
                     textView.SetBackgroundResource(Resource.Drawable.cell_border);
-
-                    // Set padding to add spacing between cells
-                    int padding = 5; // Set your desired padding
+                    int padding = 5;
                     textView.SetPadding(padding, padding, padding, padding);
-
                     TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
-                    layoutParams.Width = 150; // Set your desired width
-                    layoutParams.Height = 150; // Set your desired height
+                    layoutParams.Width = 150;
+                    layoutParams.Height = 150;
                     layoutParams.SetMargins(padding, padding, padding, padding);
                     textView.LayoutParameters = layoutParams;
 
@@ -390,7 +427,6 @@ namespace XamarinV2
 
         private void PlacementShip(int finalI, int finalJ) 
         {
-           
             if (_gamestate == GameState.PlanningPhase)
             {
                 if (ShipSelected == 0) return;
@@ -401,7 +437,6 @@ namespace XamarinV2
                     {
 
                         if (ArePositionsAvailable(finalI, finalJ, _currentShip.Size)){
-                          //  System.Diagnostics.Debug.WriteLine("Inside xx?.");
                             _currentShipSize = _currentShip.Size-1;
                             Positions newPosition = new Positions { x = finalI, y = finalJ };
                             Ship newShip = new Ship(_currentShip.Size);
@@ -418,8 +453,8 @@ namespace XamarinV2
                                 ShipSelected = 0;
                                 _currentShip = null;
                                 HideShipGroupAndGetReady();
+                                
                             }
-
                         } else
                         {
                             RunOnUiThread(() =>
@@ -551,7 +586,7 @@ namespace XamarinV2
             {
                 RunOnUiThread(() =>
                 {
-                    Toast.MakeText(this, "Wait for your turn", ToastLength.Short).Show();
+                    Toast.MakeText(this, "Poczekaj na swoją ture", ToastLength.Short).Show();
                 });
                 return;
             }
@@ -572,7 +607,6 @@ namespace XamarinV2
                         column = j,
                         gameState = GameState.PlayingPhase,
                         gameAction = GameAction.Shot,
-                       // isShootedCallback = true
                     };
 
                     isActionPerformed = true;
@@ -642,7 +676,10 @@ namespace XamarinV2
         private void OtherPlayerReady(Context context)
         {
             isOtherPlayerReady = true;
-            HideShipGroupAndGetReady();
+            if (isPlayerReady)
+            {
+                ShowGameView();
+            }
         }
 
 
@@ -711,6 +748,7 @@ namespace XamarinV2
         {
             if (_connectedSocket != null && (playerState == PlayerState.Turn || _gamestate == GameState.PlanningPhase))
             {
+                System.Diagnostics.Debug.WriteLine("SendData" + _gamestate);
                 try
                 {
                     string jsonString = JsonConvert.SerializeObject(gameActionDTO);
@@ -720,10 +758,8 @@ namespace XamarinV2
                     // Write the bytes to the OutputStream
                    
                     streamOutStream.Write(bytes, 0, bytes.Length);
-                    if (streamOutStream.IsDataAvailable())
-                    {
-                        streamOutStream.Flush();
-                    }
+                    streamOutStream.Flush();
+                    
                     // Ensure data is sent immediately
                 }
                 catch (Java.IO.IOException ex)
@@ -749,17 +785,18 @@ namespace XamarinV2
                     while (isConnection)
                     {
                         int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
-                        // Handle the read data as needed
-                        Array.Clear(buffer, 0, buffer.Length);
-                         if (bytesRead > 0)
+                    // Handle the read data as needed
+                   
+                    if (bytesRead > 0)
                         {
                             string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                             var receivedObject = JsonConvert.DeserializeObject<GameActionDTO>(receivedData);
-                            // Process the received data or update UI as needed
-
-                            if(receivedObject != null)
+                        // Process the received data or update UI as needed
+                        Array.Clear(buffer, 0, buffer.Length);
+                        if (receivedObject != null)
                             {
-                                if(receivedObject.gameAction == GameAction.Shot)
+                            System.Diagnostics.Debug.WriteLine("received Data?" + receivedObject.gameAction);
+                            if (receivedObject.gameAction == GameAction.Shot)
                                 {
                                     playerState = PlayerState.Turn;
                                     isActionPerformed = false;

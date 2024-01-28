@@ -15,6 +15,7 @@ namespace XamarinV2.Enums
     {
         None,
         PlanningPhase,
+        ReadyToPlay,
         PlayingPhase,
     }
 }
