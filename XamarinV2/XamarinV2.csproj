@@ -64,11 +64,20 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activities\DiscoveredDevices2.cs" />
+    <Compile Include="Activities\GameActivity2.cs" />
     <Compile Include="BluetoothReceiver.cs" />
     <Compile Include="CustomBluetooth.cs" />
-    <Compile Include="DiscoveredDevicesActivity.cs" />
-    <Compile Include="GameActivity.cs" />
-    <Compile Include="MainActivity.cs" />
+    <Compile Include="Activities\DiscoveredDevicesActivity.cs" />
+    <Compile Include="DTO\GameActionDTO.cs" />
+    <Compile Include="DTO\GameData.cs" />
+    <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Ship.cs" />
+    <Compile Include="Enums\GameAction.cs" />
+    <Compile Include="Enums\GameState.cs" />
+    <Compile Include="Enums\PlayerState.cs" />
+    <Compile Include="Activities\GameActivity.cs" />
+    <Compile Include="Activities\MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -168,6 +177,7 @@
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
     Other similar extension points exist, see Microsoft.Common.targets.

@@ -29,123 +29,75 @@ using Android.Bluetooth.LE;
 using Java.Lang.Reflect;
 using Newtonsoft.Json;
 using Android.App.Admin;
-
+using XamarinV2.DTO;
 //using static Xamarin.Essentials.Platform;
 
 namespace XamarinV2
 {
     [Activity(Label = "Discovered Devices", ScreenOrientation = ScreenOrientation.Portrait)]
-    public class DiscoveredDevicesActivity : AppCompatActivity
+    public class DiscoveredDevices2 : AppCompatActivity
     {
-        private ProgressDialog progressDialog;
+        private static ProgressDialog progressDialog;
         private ListView listView;
         private BluetoothAdapter mBluetoothAdapter;
-        private ArrayAdapter<string> mArrayAdapter;
-        private BluetoothReceiver mReceiver;
+        private static ArrayAdapter<string> mArrayAdapter;
+        private static BluetoothReceiver mReceiver;
         public static readonly UUID GameUUID = UUID.FromString("9b406827-5fd0-4046-99ad-060521820fb6");
         private BluetoothServerSocket serverSocket;
-        private bool isClickable;
-        private readonly object lockObject = new object();
-        private bool isServerRunning;
-
-        public readonly Dictionary<string, UUID> GamesUUID = new Dictionary<string, UUID>()
-        {
-                { "BattleShips", UUID.FromString("9b406827-5fd0-4046-99ad-060521820fb6") },
-                { "Quiz", UUID.FromString("d89ccc65-d79b-4cc9-9bcd-d8d516448f60") },
-        };
-
-        public string _chosenGame;
+        private static BluetoothSocket _connectedSocket = null;
+        private static Button sendButton;
+        private static Button hostButton;
+        private static Button scanButton;
 
 
         protected override async void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            isServerRunning = false;
-            isClickable = true;
             SetContentView(Resource.Layout.content_main);
-
-
-            string chosenGame = Intent.GetStringExtra("Game");
-            if (!string.IsNullOrEmpty(chosenGame))
-            {
-                _chosenGame = chosenGame;
-            }
-            else
-            {
-                _chosenGame = "BattleShips";
-            }
-
-
-            // BluetoothManager bluetoothManager = (BluetoothManager)this.GetSystemService(Context.BluetoothService);
-            // mBluetoothAdapter = bluetoothManager.Adapter;
             mBluetoothAdapter = BluetoothAdapter.DefaultAdapter;
             mReceiver = new BluetoothReceiver(this);
+            CheckBluetoothPermissions();
             await Permissions.RequestAsync<BLEPermission>();
             PrepareUI();
         }
 
+
+
+
         private void PrepareUI()
         {
-            TextView gameName = FindViewById<TextView>(Resource.Id.gameName);
-            gameName.Text = _chosenGame;
-
-
             Button button1 = FindViewById<Button>(Resource.Id.btnScan);
-            button1.Click += (sender, e) =>
-            {
+            button1.Click += (sender, e) => {
                 StartScanning();
             };
+            scanButton = button1;
 
             Button buttonHost = FindViewById<Button>(Resource.Id.btnHost);
             buttonHost.Click += (sender, e) =>
             {
                 StartHosting();
             };
-
-            Button backButton = FindViewById<Button>(Resource.Id.btnBack);
-            backButton.Click += (sender, e) =>
-            {
-                BackButton();
-            };
+            hostButton = buttonHost;
 
             listView = FindViewById<ListView>(Resource.Id.deviceListView);
 
-            //mArrayAdapter = new ArrayAdapter<string>(this, Resource.Layout.list_item_layout, Resource.Id.itemTextView, mReceiver.GetDeviceList());
-             mArrayAdapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleListItem1, mReceiver.GetDeviceList());
-            // listView.SetAdapter(mArrayAdapter);
-            listView.Adapter = mArrayAdapter;
+            mArrayAdapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleListItem1, mReceiver.GetDeviceList());
+            listView.SetAdapter(mArrayAdapter);
 
-            listView.ItemClick += async (sender, e) =>
+            listView.ItemClick += (sender, e) =>
             {
-                if (isClickable)
-                {
-                    string selectedDevice = mArrayAdapter.GetItem(e.Position);
-                    isClickable = false;
-                    try
-                    {
-                        // Handle the click event for the selected device
-                        await HandleDeviceClick(selectedDevice);
-                    }
-                    finally
-                    {
-                        // Enable clicks after a short delay (e.g., 1 second)
-                        await Task.Delay(500); // Adjust the delay duration as needed
-                        isClickable = true;
-                    }
-                }
+                // Get the selected device
+                string selectedDevice = mArrayAdapter.GetItem(e.Position);
+
+                // Handle the click event for the selected device
+                HandleDeviceClick(selectedDevice);
+
             };
         }
 
-        private void BackButton()
-        {
-            Intent intent = new Intent(this, typeof(MainActivity));
-            intent.SetFlags(ActivityFlags.ClearTop);
-            StartActivity(intent);
-            Finish();
-        }
 
 
-        private async Task HandleDeviceClick(string selectedDevice)
+        void HandleDeviceClick(string selectedDevice)
         {
             string[] deviceInfo = selectedDevice.Split('\n');
             string selectedDeviceName = deviceInfo[0];
@@ -153,13 +105,6 @@ namespace XamarinV2
             BluetoothDevice searchingDevice = null;
             List<BluetoothDevice> scannedDevices = mReceiver.GetScannedDeviceList();
 
-            if (!mBluetoothAdapter.IsEnabled)
-            {
-                // Bluetooth is not enabled, prompt user to enable it
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ActionRequestEnable);
-                StartActivityForResult(enableBtIntent, 2); // Use a different request code
-                return;
-            }
 
             foreach (BluetoothDevice device in scannedDevices)
             {
@@ -171,33 +116,85 @@ namespace XamarinV2
                 }
             }
 
-
             // Check if the selected device was found
             if (searchingDevice != null)
             {
                 // Handle the click event for the selected device
-                //    await ConnectToDevice(this, searchingDevice);
-                await ConnectToDevice(this, searchingDevice);
-              //  await Task.Run(async() => { await ConnectToDevice(this, searchingDevice); });
+                // For example, initiate pairing or connect to the device
+                PairDevice(searchingDevice);
+            }
+            else
+            {
+                // Device not found, handle the situation accordingly
             }
         }
 
-        private async Task ConnectToDevice(Context context, BluetoothDevice device)
-        {
-                BluetoothSocket socket = null;
 
+        private void PairDevice(BluetoothDevice device)
+        {
+            if (device != null)
+            {
+                // Ensure Bluetooth is enabled
+                if (!mBluetoothAdapter.IsEnabled)
+                {
+                    // Bluetooth is not enabled, prompt user to enable it
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ActionRequestEnable);
+                    StartActivityForResult(enableBtIntent, 2); // Use a different request code
+                    return;
+                }
+            }
+
+            //Check if is bonded??
+            /* if (device.BondState == Bond.Bonded)
+             {
+                 Method m = device.Class.GetMethod("removeBond", null);
+                 m.Invoke(device, null);
+             } else
+             {
+                 //device.CreateBond();
+             }*/
+            ConnectToDevice(this, device);
+        }
+
+        private static void HideUIElements(Context context)
+        {
+            ((Activity)context).RunOnUiThread(() =>
+            {
+                hostButton.Visibility = ViewStates.Gone;
+                scanButton.Visibility = ViewStates.Gone;
+            });
+        }
+
+        private static void ShowUIElementsAfterDisconnect(Context context)
+        {
+            ((Activity)context).RunOnUiThread(() =>
+            {
+                hostButton.Visibility = ViewStates.Visible;
+                scanButton.Visibility = ViewStates.Visible;
+                sendButton.Visibility = ViewStates.Gone;
+            });
+        }
+
+
+        private static async Task ConnectToDevice(Context context, BluetoothDevice device)
+        {
+
+
+            await Task.Run(() =>
+            {
                 try
                 {
 
+
+
                     // Toast.MakeText(context, "Connected?", ToastLength.Short).Show();
-                    socket = device.CreateRfcommSocketToServiceRecord(GameUUID);
+                    BluetoothSocket socket = device.CreateRfcommSocketToServiceRecord(GameUUID);
                     ((Activity)context).RunOnUiThread(() =>
                     {
                         // Update UI elements or perform UI-related operations here
                         Toast.MakeText(context, "Connecting...", ToastLength.Short).Show();
                     });
-                    isClickable = false;
-                    await socket.ConnectAsync();
+                    socket.Connect();
 
                     if (socket.IsConnected)
                     {
@@ -231,50 +228,87 @@ namespace XamarinV2
                         // Update UI elements or perform UI-related operations here
                         Toast.MakeText(context, "Device is not listining", ToastLength.Short).Show();
                     });
-                // Handle the exception appropriately
-                    isClickable = true;
+                    // Handle the exception appropriately
                 }
-                finally
-                {
-                    // Close the socket in the finally block to ensure it is closed
-                    if (socket != null)
-                    {
-                        try
-                        {
-                            socket.Close();
-                        }
-                        catch (Java.IO.IOException ex)
-                        {
-                            // Handle the exception if closing the socket fails
-                        }
-                    }
-                }
+            });
         }
 
         private static void LeadToNewActivity(Context context, string type)
         {
             var intent = new Intent(context, typeof(GameActivity));
             intent.PutExtra("Connected-Device", type);
-            // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
             context.StartActivity(intent);
+        }
+
+        private static void HandleSocketInput(Context context, BluetoothSocket socket)
+        {
+            bool isConnection = true;
+            try
+            {
+                // Get the InputStream from the socket for reading data
+                Stream inputStream = socket.InputStream;
+                byte[] buffer = new byte[1024]; // Adjust the buffer size as needed
+
+                while (isConnection)
+                {
+                    int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                    // Handle the read data as needed
+                    if (bytesRead > 0)
+                    {
+                        string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        var receivedObject = JsonConvert.DeserializeObject<GameData>(receivedData);
+                        // Process the received data or update UI as needed
+
+                        ((Activity)context).RunOnUiThread(() =>
+                        {
+                            Toast.MakeText(context, $"Msg->P_State: {receivedObject.PlayerState} ->G_sState: {receivedObject.State}", ToastLength.Short).Show();
+                        });
+                    }
+                }
+            }
+            catch (Java.IO.IOException e)
+            {
+                //Log.Error("SocketError", "Error handling socket input: " + e.Message);
+
+                ((Activity)context).RunOnUiThread(() =>
+                {
+                    Toast.MakeText(context, "Socket disconnected", ToastLength.Short).Show();
+
+                });
+                ShowUIElementsAfterDisconnect(context);
+                isConnection = false;
+                // Handle the exception appropriately
+            }
+            finally // new->cleanup?
+            {
+                // Cleanup actions (e.g., close the socket or release resources)
+                if (socket != null && socket.IsConnected)
+                {
+                    try
+                    {
+                        socket.Close();
+                    }
+                    catch (Java.IO.IOException e)
+                    {
+                        Log.Error("SocketError", "Error closing socket: " + e.Message);
+                        // Handle the exception appropriately
+                    }
+                }
+            }
         }
 
 
         //  Toast.MakeText(this, "PariDevice:" + device.Name, ToastLength.Short).Show();
         private void StartHosting()
         {
-            if (isServerRunning)
-            {
-                // Server is already running
-                return;
-            }
-            isServerRunning = true;
             if (mBluetoothAdapter == null)
             {
+                // Device does not support Bluetooth
                 return;
             }
             if (!mBluetoothAdapter.IsEnabled)
             {
+                // Bluetooth is not enabled, prompt user to enable it
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ActionRequestEnable);
                 StartActivityForResult(enableBtIntent, 1);
                 return;
@@ -282,14 +316,11 @@ namespace XamarinV2
 
 
             progressDialog = new ProgressDialog(this);
-            progressDialog.SetMessage("Waiting for opponent...");
+            progressDialog.SetMessage("Waiting for oponnet...");
             progressDialog.SetCancelable(true);
             progressDialog.SetButton("Cancel", (sender, args) =>
             {
-                // StopServer();
-                isServerRunning = false;
-
-                // Close server socket and perform cleanup if needed
+                // User pressed cancel, close the server socket
                 if (serverSocket != null)
                 {
                     try
@@ -298,31 +329,28 @@ namespace XamarinV2
                     }
                     catch (Java.IO.IOException e)
                     {
-                        // Handle socket close exception if needed
+                        //   e.PrintStackTrace();
                     }
                 }
                 progressDialog.Dismiss();
+                Toast.MakeText(this, "Cancel", ToastLength.Short).Show();
             });
 
             progressDialog.CancelEvent += (sender, e) =>
             {
-                // StopServer();
-                isServerRunning = false;
-
-                // Close server socket and perform cleanup if needed
+                // User clicked outside the dialog, close the server socket
                 if (serverSocket != null)
                 {
                     try
                     {
                         serverSocket.Close();
                     }
-                    catch (Java.IO.IOException f)
+                    catch (Java.IO.IOException ex)
                     {
-                        // Handle socket close exception if needed
+                        //  e.PrintStackTrace();
                     }
                 }
-
-                Toast.MakeText(this, "User clicked outside", ToastLength.Short).Show();
+                Toast.MakeText(this, "Userclicked Outisde", ToastLength.Short).Show();
             };
 
 
@@ -330,58 +358,69 @@ namespace XamarinV2
             progressDialog.Show();
 
 
+
+
             Task.Run(() =>
             {
-                lock (lockObject)
+                try
                 {
-                    try
-                    {
-                        serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GameUUID);
 
-                        while (isServerRunning)
+
+                    serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GameUUID);
+
+                    while (true)
+                    {
+                        // Check for incoming connection requests
+                        BluetoothSocket socket = serverSocket.Accept();
+
+                        if (socket != null)
                         {
-                            BluetoothSocket socket = serverSocket.Accept();
-
-                            if (socket != null)
-                            {
-                                CustomBluetooth.Instance.MakeConnection(socket, null);
-                                if (serverSocket != null)
-                                {
-                                    serverSocket.Close();
-                                }
-                                LeadToNewActivity(this, "Host");
-
-                            }
-                        }
-                    }
-                    catch (Java.IO.IOException e)
-                    {
-                        Log.Error("432", "Error-1: " + e.Message);
-                        progressDialog.Dismiss();
-                    }
-                    finally
-                    {
-                        if (serverSocket != null)
-                        {
-                            try
+                            CustomBluetooth.Instance.MakeConnection(socket, null);
+                            if (serverSocket != null)
                             {
                                 serverSocket.Close();
                             }
-                            catch (Java.IO.IOException e)
-                            {
-                                Log.Error("4213", "Error-2: " + e.Message);
-                                // Handle socket close exception if needed
-                            }
+                            // _connectedSocket = socket;
+                            LeadToNewActivity(this, "Host");
+                            /* RunOnUiThread(() =>
+                             {
+                                 Toast.MakeText(this, "Device connected", ToastLength.Short).Show();
+                                 // Handle the accepted socket on the UI thread as needed
+                                 sendButton.Visibility = ViewStates.Visible;
+                                 progressDialog.Dismiss();
+                                 mReceiver.ClearDeviceList();
+                                 mArrayAdapter.NotifyDataSetChanged();
+                             });
+                             HideUIElements(this);
+                             HandleSocketInput(this, socket);*/
                         }
-
-                        lock (lockObject)
+                    }
+                }
+                catch (Java.IO.IOException e)
+                {
+                    Log.Error("432", "Error-1: " + e.Message);
+                    progressDialog.Dismiss();
+                }
+                finally
+                {
+                    // Close the server socket when done
+                    if (serverSocket != null)
+                    {
+                        try
                         {
-                            isServerRunning = false;
+                            serverSocket.Close();
+                        }
+                        catch (Java.IO.IOException e)
+                        {
+                            Log.Error("4213", "Error-2: " + e.Message);
+                            // Handle socket close exception if needed
                         }
                     }
                 }
             });
         }
+
+
 
         private void StartScanning()
         {
@@ -398,6 +437,8 @@ namespace XamarinV2
                 StartActivityForResult(enableBtIntent, 1);
                 return;
             }
+
+            // Clear existing device list
 
             mArrayAdapter.NotifyDataSetChanged();
 
@@ -442,7 +483,13 @@ namespace XamarinV2
             {
                 if (ContextCompat.CheckSelfPermission(this, permission) != Permission.Granted)
                 {
+                    // Permission is not granted, request it
+                    Toast.MakeText(this, "NotGranted?" + permission, ToastLength.Short).Show();
                     ActivityCompat.RequestPermissions(this, permissions, 1);
+                }
+                else
+                {
+                    //   Toast.MakeText(this, "granted?" + permission, ToastLength.Short).Show();
                 }
             }
         }
@@ -461,41 +508,5 @@ namespace XamarinV2
 
             }
         }
-    }
-
-    public enum GameState
-    {
-        None,
-        PlanningPhase,
-        PlayingPhase,
-    }
-
-    public enum PlayerState
-    {
-        Turn,
-        Waiting,
-    }
-
-    public class GameActionDTO
-    {
-        public int row = 0;
-        public int column = 0;
-        public GameState gameState;
-        public GameAction gameAction;
-        public bool isShootedCallback = false;
-    }
-
-    public enum GameAction
-    {
-        PlayerAction,
-        Callback,
-        Shot,
-    }
-
-
-    public class GameData
-    {
-        public GameState State;
-        public PlayerState PlayerState;
     }
 }
