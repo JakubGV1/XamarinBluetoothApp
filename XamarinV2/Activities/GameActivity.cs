@@ -32,9 +32,9 @@ namespace XamarinV2
     public class GameActivity : AppCompatActivity
     {
        
-        static TextView[,] textViews = new TextView[5, 5];
-        static TextView[,] myTextViews = new TextView[5, 5];
-        static TextView ownTable;
+        TextView[,] textViews = new TextView[5, 5];
+        TextView[,] myTextViews = new TextView[5, 5];
+        TextView ownTable;
         private ImageView ship1;
         private ImageView ship2;
         private ImageView ship3;
@@ -45,28 +45,31 @@ namespace XamarinV2
 
         private LinearLayout ShipsView;
 
-        private static TextView _turnText;
-        private static BluetoothSocket _connectedSocket;
-        private static GameActivity _activity;
-        private static int[,] ShipLocation;
+        private TextView _turnText;
+        private BluetoothSocket _connectedSocket;
+        private GameActivity _activity;
+        private int[,] ShipLocation;
         // turn?
-        private static PlayerState playerState;
-        private static GameState _gamestate;
-        private static bool isActionPerformed;
-        private static readonly Random random = new Random();
+        private PlayerState playerState;
+        private GameState _gamestate;
+        private bool isActionPerformed;
+        private readonly Random random = new Random();
         private Dictionary<int, int> shipsToPlace;
         private int ShipSelected;
         private List<Ship> PlayerShips;
         private int _currentShipSize;
         private int gridSize = 5;
         private Ship _currentShip;
-        private static bool isOtherPlayerReady;
+        private bool isOtherPlayerReady;
         private bool isPlayerReady;
-
+        private string playerConnectInfo;
 
         private TableLayout myTableLayout;
         private TableLayout opponentTableLayout;
         bool isConnection;
+
+        private bool isOtherPlayerWantPlayAgain;
+        private bool wantPlayAgain;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -88,9 +91,10 @@ namespace XamarinV2
             });
 
 
-          string connectedDevice = Intent.GetStringExtra("Connected-Device");
+            string connectedDevice = Intent.GetStringExtra("Connected-Device");
             if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
             {
+                playerConnectInfo = connectedDevice;
                 if (connectedDevice == "Host")
                 {
                     playerState = PlayerState.Turn;
@@ -104,7 +108,7 @@ namespace XamarinV2
                 if (_connectedSocket != null && _connectedSocket.IsConnected)
                 {
                     isConnection = true;
-                    Task.Run(() =>  HandleSocketInput(this, _connectedSocket) );
+                    Task.Run(() =>  HandleSocketInput(this, _connectedSocket));
                     //Task.Run(() => HandleSocketInput2(this, _connectedSocket));
                     Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
                 }
@@ -119,6 +123,10 @@ namespace XamarinV2
 
         private void InitializeConfig()
         {
+            wantPlayAgain = false;
+            isOtherPlayerWantPlayAgain = false;
+            isActionPerformed = false;
+            isPlayerReady = false;
             isOtherPlayerReady = false;
             _currentShipSize = 0;
             ShipLocation = new int[5, 5];
@@ -290,8 +298,6 @@ namespace XamarinV2
 
         private void ShowGameView()
         {
-
-
             try
             {
                 RunOnUiThread(() =>
@@ -302,7 +308,7 @@ namespace XamarinV2
                     CreateSmallerTable();
                     CreateOpponentTable();
                     _turnText.Text = $"Twoja tura";
-                    // _gamestate = GameState.PlayingPhase;
+                    _gamestate = GameState.PlayingPhase;
                     if (playerState == PlayerState.Turn)
                     {
                         _turnText.Text = $"Twoja tura";
@@ -541,46 +547,6 @@ namespace XamarinV2
         }
 
 
-
-        private void RandomShipPlacement()
-        {
-            int pointsToAllocate = 7;
-            int maxAttempts = 50; // Set a reasonable maximum number of attempts
-
-            for (int i = 0; i < pointsToAllocate; i++)
-            {
-                int attempts = 0;
-
-                while (true)
-                {
-                    // Generate random row and column indices
-                    int randomRow = random.Next(0, 5);
-                    int randomColumn = random.Next(0, 5);
-
-                    // Check if the selected cell is already allocated
-                    if (ShipLocation[randomRow, randomColumn] == 0)
-                    {
-                        // Allocate the point
-                        ShipLocation[randomRow, randomColumn] = 1;
-                        break; // Break out of the loop if a suitable index is found
-                    }
-
-                    // Increment attempts
-                    attempts++;
-
-                    // Check if the maximum number of attempts is reached
-                    if (attempts >= maxAttempts)
-                    {
-                        // Handle the situation when a suitable index is not found within the limit
-                        // You can throw an exception, log a message, or take appropriate action
-                        break;
-                        // throw new InvalidOperationException("Unable to find suitable indices within the maximum number of attempts.");
-                    }
-                }
-            }
-        }
-
-
         private void CheckClick(int i, int j) {
             if(playerState == PlayerState.Waiting && isActionPerformed)
             {
@@ -640,9 +606,38 @@ namespace XamarinV2
                             Positions hitPosition = ship.positions.FirstOrDefault(pos => pos.x == row && pos.y == column);
                             if (hitPosition != null)
                             {
+                                System.Diagnostics.Debug.WriteLine("Ship hitted");
                                 hitPosition.isHit = true;
+/*                                if (ship.IsDestroyed)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Ship destroyed -- Checkfield");
+                                }*/
+
+                                bool allDestroyed = PlayerShips.All(ship => ship.IsDestroyed);
+                                if (allDestroyed)
+                                {
+                                    GameActionDTO gameActionCallback = new GameActionDTO
+                                    {
+                                        row = 0,
+                                        column = 0,
+                                        gameState = GameState.Finished,
+                                        gameAction = GameAction.End,
+                                    };
+
+                                    System.Diagnostics.Debug.WriteLine("Znisczono wszystkie statki");
+                                    _gamestate = GameState.Finished;
+                                    SendGameData(gameActionCallback);
+                                    GameFinished(context, "Przegrałeś");
+                                    //GameFinished(context, "Przegrałeś");
+
+                                }
+
+
+
+
+
+                                }
                             }
-                        }
                         myTextViews[row, column].SetBackgroundResource(Resource.Drawable.cellShooted);
                         myTextViews[row, column].Text = "X";
                     }
@@ -662,11 +657,11 @@ namespace XamarinV2
                     {
                         textViews[row, column].SetBackgroundResource(Resource.Drawable.cell_clicked);
                         textViews[row, column].Text = "X";
-                        _turnText.Text = "Opponent turn";
+                        _turnText.Text = "Tura przeciwnika";
                         return;
                     }
                     textViews[row, column].Text = "X";
-                    _turnText.Text = "Opponent turn";
+                    _turnText.Text = "Tura przeciwnika";
                     playerState = PlayerState.Waiting;
                 }
             });      
@@ -692,10 +687,10 @@ namespace XamarinV2
         private void ShowConfirmationDialog()
         {
             AndroidX.AppCompat.App.AlertDialog.Builder alertDialogBuilder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
-            alertDialogBuilder.SetMessage("Are you sure you want to leave?");
+            alertDialogBuilder.SetMessage("Czy chcesz wyjść?");
             alertDialogBuilder.SetCancelable(false);
 
-            alertDialogBuilder.SetPositiveButton("Yes", (senderAlert, args) =>
+            alertDialogBuilder.SetPositiveButton("Tak", (senderAlert, args) =>
             {
                 // Close the Bluetooth socket or handle other cleanup actions
                 //CloseBluetoothSocket(); // Adjust the method name based on your requirements
@@ -713,7 +708,7 @@ namespace XamarinV2
                 Finish();
             });
 
-            alertDialogBuilder.SetNegativeButton("No", (senderAlert, args) =>
+            alertDialogBuilder.SetNegativeButton("Nie", (senderAlert, args) =>
             {
                 // If the user cancels, do nothing (or handle as needed)
             });
@@ -724,7 +719,77 @@ namespace XamarinV2
         }
 
 
-        private static void CloseBluetoothSocket()
+        private void FinishedDialogShow(string status)
+        {
+            AndroidX.AppCompat.App.AlertDialog.Builder alertDialogBuilder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
+            alertDialogBuilder.SetMessage($"{status}! \n Czy chcesz zagrać ponownie?");
+            alertDialogBuilder.SetCancelable(false);
+
+            alertDialogBuilder.SetPositiveButton("Tak", (senderAlert, args) =>
+            {
+                wantPlayAgain = true;
+                // System.Diagnostics.Debug.WriteLine("Kliknieto tak");
+                GameActionDTO gameActionCallback = new GameActionDTO
+                {
+                    row = 0,
+                    column = 0,
+                    gameState = GameState.Finished,
+                    gameAction = GameAction.PlayAgain,
+                };
+                SendGameData(gameActionCallback);
+
+                if (isOtherPlayerWantPlayAgain)
+                {
+
+                    RestartGame();
+                }
+
+            });
+
+            alertDialogBuilder.SetNegativeButton("Nie", (senderAlert, args) =>
+            {
+                CloseBluetoothSocket();
+                Intent intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+
+                // Set the flags to clear the activity stack
+                intent.SetFlags(ActivityFlags.ClearTop);
+                // Start PreviousActivity
+                StartActivity(intent);
+
+                Finish();
+            });
+
+            // Create and show the dialog
+            AndroidX.AppCompat.App.AlertDialog alertDialog = alertDialogBuilder.Create();
+            alertDialog.Show();
+        }
+
+        private void RestartGame()
+        {
+            if (playerConnectInfo == "Host")
+            {
+                playerState = PlayerState.Waiting;
+            }
+            else
+            {
+                playerState = PlayerState.Turn;
+            }
+            _gamestate = GameState.PlanningPhase;
+
+            RunOnUiThread(() =>
+            {
+                myTableLayout.RemoveAllViews();
+                opponentTableLayout.RemoveAllViews();
+                ShipsView.Visibility = ViewStates.Visible;
+                InitializeConfig();
+            //    _turnText = FindViewById<TextView>(Resource.Id.turnText);
+                CreatePlanningTable(opponentTableLayout);
+            });
+
+        }
+
+
+        private void CloseBluetoothSocket()
         {
             try
             {
@@ -746,7 +811,7 @@ namespace XamarinV2
     
         private void SendGameData(GameActionDTO gameActionDTO)
         {
-            if (_connectedSocket != null && (playerState == PlayerState.Turn || _gamestate == GameState.PlanningPhase))
+            if (_connectedSocket != null && (playerState == PlayerState.Turn || _gamestate == GameState.PlanningPhase || _gamestate == GameState.Finished))
             {
                 System.Diagnostics.Debug.WriteLine("SendData" + _gamestate);
                 try
@@ -770,6 +835,24 @@ namespace XamarinV2
             }
         }
 
+        private void GamePlayAgain()
+        {
+            isOtherPlayerWantPlayAgain = true;
+            if (wantPlayAgain)
+            {
+                RestartGame();
+            }
+        }
+
+
+        private void GameFinished(Context context, string status)
+        {
+            RunOnUiThread(() =>
+            {
+                _gamestate = GameState.Finished;
+                FinishedDialogShow(status);
+            });
+        }
 
 
         private void HandleSocketInput(Context context, BluetoothSocket socket)
@@ -795,7 +878,7 @@ namespace XamarinV2
                         Array.Clear(buffer, 0, buffer.Length);
                         if (receivedObject != null)
                             {
-                            System.Diagnostics.Debug.WriteLine("received Data?" + receivedObject.gameAction);
+                           
                             if (receivedObject.gameAction == GameAction.Shot)
                                 {
                                     playerState = PlayerState.Turn;
@@ -803,11 +886,13 @@ namespace XamarinV2
 
                                     ((Activity)context).RunOnUiThread(() =>
                                     {
-                                        _turnText.Text = "Your turn";
+                                        _turnText.Text = "Twoja tura";
                                        
                                     });
 
                                     bool Checked = CheckField(context, receivedObject.row, receivedObject.column);
+                                if (_gamestate != GameState.Finished)
+                                {
                                     GameActionDTO gameActionCallback = new GameActionDTO
                                     {
                                         row = receivedObject.row,
@@ -819,18 +904,27 @@ namespace XamarinV2
                                     if (Checked)
                                     {
                                         gameActionCallback.isShootedCallback = true;
-                                    } else
+                                    }
+                                    else
                                     {
                                         gameActionCallback.isShootedCallback = false;
                                     }
-
                                     SendGameData(gameActionCallback);
-                                } else if(receivedObject.gameAction == GameAction.Callback)
+                                }
+
+                                // SendGameData(gameActionCallback);
+                            } else if(receivedObject.gameAction == GameAction.Callback)
                                 {
                                     UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
                                 } else if(receivedObject.gameAction == GameAction.PlayerAction)
                                 {
                                     OtherPlayerReady(context);
+                                } else if(receivedObject.gameAction == GameAction.End)
+                                {
+                                    GameFinished(context, "Wygrałeś");
+                                } else if(receivedObject.gameAction == GameAction.PlayAgain)
+                                {
+                                    GamePlayAgain();
                                 }
                             }
 
@@ -849,7 +943,7 @@ namespace XamarinV2
                     isConnection = false;
                     ((Activity)context).RunOnUiThread(() =>
                     {
-                        Toast.MakeText(context, "Socket disconnected", ToastLength.Short).Show();
+                        Toast.MakeText(context, "Nastąpiło rozłączenie", ToastLength.Short).Show();
                         Intent intent = new Intent(context, typeof(DiscoveredDevicesActivity));
 
                         // Set the flags to clear the activity stack
@@ -860,7 +954,7 @@ namespace XamarinV2
                     });
                     //  ShowUIElementsAfterDisconnect(context);
                 }
-                finally // new->cleanup?
+                /*finally // new->cleanup?
                 {
                     // Cleanup actions (e.g., close the socket or release resources)
                     if (socket != null && socket.IsConnected)
@@ -875,7 +969,7 @@ namespace XamarinV2
                             // Handle the exception appropriately
                         }
                     }
-                }
+                }*/
         }
 
 

@@ -17,5 +17,7 @@ namespace XamarinV2.Enums
         Callback,
         Shot,
         Ready,
+        End,
+        PlayAgain,
     }
 }

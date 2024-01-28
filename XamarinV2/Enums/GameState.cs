@@ -17,5 +17,6 @@ namespace XamarinV2.Enums
         PlanningPhase,
         ReadyToPlay,
         PlayingPhase,
+        Finished,
     }
 }
