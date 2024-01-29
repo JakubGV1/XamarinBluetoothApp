@@ -323,21 +323,6 @@ namespace XamarinV2
             {
                 Log.Error("ShowGameView", "Exception: " + ex.Message);
             }
-            //   _gamestate = GameState.PlayingPhase;
-           // ownTable.Text = "Twoja tabela";
-            // myTableLayout.RemoveAllViews();
-            // opponentTableLayout.RemoveAllViews();
-            /// CreateSmallerTable();
-            // CreateOpponentTable();
-           // _turnText.Text = $"Twoja tura";
-           // _gamestate = GameState.PlayingPhase;
-            /* if(playerState == PlayerState.Turn)
-             {
-                 _turnText.Text = $"Twoja tura";
-             } else
-             {
-                 _turnText.Text = $"Tura przeciwnika";
-             }*/
         }
 
         private void CreateSmallerTable()
