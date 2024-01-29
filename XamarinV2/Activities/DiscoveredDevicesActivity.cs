@@ -112,7 +112,7 @@ namespace XamarinV2
 
             listView = FindViewById<ListView>(Resource.Id.deviceListView);
 
-            //mArrayAdapter = new ArrayAdapter<string>(this, Resource.Layout.list_item_layout, Resource.Id.itemTextView, mReceiver.GetDeviceList());
+            
              mArrayAdapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleListItem1, mReceiver.GetDeviceList());
             // listView.SetAdapter(mArrayAdapter);
             listView.Adapter = mArrayAdapter;
@@ -125,13 +125,13 @@ namespace XamarinV2
                     isClickable = false;
                     try
                     {
-                        // Handle the click event for the selected device
+                      
                         HandleDeviceClick(selectedDevice);
                     }
                     finally
                     {
-                        // Enable clicks after a short delay (e.g., 1 second)
-                        await Task.Delay(500); // Adjust the delay duration as needed
+                      
+                        await Task.Delay(500); 
                         isClickable = true;
                     }
                 }
@@ -168,18 +168,13 @@ namespace XamarinV2
                 if (device.Name == selectedDeviceName && device.Address == selectedDeviceAddress)
                 {
                     searchingDevice = device;
-                    //Toast.MakeText(this, searchingDevice.Name, ToastLength.Short).Show();
+                    
                     break;
                 }
             }
 
-
-            // Check if the selected device was found
             if (searchingDevice != null)
             {
-                // Handle the click event for the selected device
-                //    await ConnectToDevice(this, searchingDevice);
-              //  await ConnectToDevice(this, searchingDevice);
                 Task.Run(() => ConnectToDevice(this, searchingDevice));
             }
         }
@@ -221,8 +216,6 @@ namespace XamarinV2
             context.StartActivity(intent);
         }
 
-
-        //  Toast.MakeText(this, "PariDevice:" + device.Name, ToastLength.Short).Show();
         private void StartHosting()
         {
             if (isServerRunning)
@@ -248,10 +241,8 @@ namespace XamarinV2
             progressDialog.SetCancelable(true);
             progressDialog.SetButton("Anuluj", (sender, args) =>
             {
-                // StopServer();
                 isServerRunning = false;
 
-                // Close server socket and perform cleanup if needed
                 if (serverSocket != null)
                 {
                     try
@@ -260,7 +251,7 @@ namespace XamarinV2
                     }
                     catch (Java.IO.IOException e)
                     {
-                        // Handle socket close exception if needed
+                        
                     }
                 }
                 progressDialog.Dismiss();
@@ -268,10 +259,9 @@ namespace XamarinV2
 
             progressDialog.CancelEvent += (sender, e) =>
             {
-                // StopServer();
-                isServerRunning = false;
 
-                // Close server socket and perform cleanup if needed
+                isServerRunning = false;
+               
                 if (serverSocket != null)
                 {
                     try
@@ -280,11 +270,11 @@ namespace XamarinV2
                     }
                     catch (Java.IO.IOException f)
                     {
-                        // Handle socket close exception if needed
+                        
                     }
                 }
 
-                Toast.MakeText(this, "User clicked outside", ToastLength.Short).Show();
+              //  Toast.MakeText(this, "Przerwano nasłuchiwanie", ToastLength.Short).Show();
             };
 
 
@@ -352,7 +342,6 @@ namespace XamarinV2
 
             if (!mBluetoothAdapter.IsEnabled)
             {
-                // Bluetooth is not enabled, prompt user to enable it
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ActionRequestEnable);
                 StartActivityForResult(enableBtIntent, 1);
                 return;

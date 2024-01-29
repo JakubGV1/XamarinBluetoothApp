@@ -24,6 +24,7 @@ using XamarinV2.Enums;
 using GameState = XamarinV2.Enums.GameState;
 using System.Diagnostics;
 using Java.IO;
+using Java.Net;
 
 
 namespace XamarinV2
@@ -70,6 +71,8 @@ namespace XamarinV2
 
         private bool isOtherPlayerWantPlayAgain;
         private bool wantPlayAgain;
+
+        private ProgressDialog progressDialog;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -323,21 +326,6 @@ namespace XamarinV2
             {
                 Log.Error("ShowGameView", "Exception: " + ex.Message);
             }
-            //   _gamestate = GameState.PlayingPhase;
-           // ownTable.Text = "Twoja tabela";
-            // myTableLayout.RemoveAllViews();
-            // opponentTableLayout.RemoveAllViews();
-            /// CreateSmallerTable();
-            // CreateOpponentTable();
-           // _turnText.Text = $"Twoja tura";
-           // _gamestate = GameState.PlayingPhase;
-            /* if(playerState == PlayerState.Turn)
-             {
-                 _turnText.Text = $"Twoja tura";
-             } else
-             {
-                 _turnText.Text = $"Tura przeciwnika";
-             }*/
         }
 
         private void CreateSmallerTable()
@@ -581,10 +569,10 @@ namespace XamarinV2
             }
         }
 
-        private bool CheckField(Context context, int row, int column)
+        private bool CheckField(Context context, int row, int column, out bool isDestroyed)
         {
             //ShipLocation[row,column]
-
+            
             if (!PlayerShips.Any(ship => ship.positions.Any(pos => pos.x == row && pos.y == column)))
             {
                 ((Activity)context).RunOnUiThread(() =>
@@ -594,60 +582,52 @@ namespace XamarinV2
                         myTextViews[row, column].Text = "X";
                     }
                 });
-              return false;
+                isDestroyed = false;
+                return false;
             }
-
-                ((Activity)context).RunOnUiThread(() =>
+            isDestroyed = false;
+            if (myTextViews[row, column].Text != "X")
+            {
+                foreach (Ship ship in PlayerShips)
                 {
-                    if (myTextViews[row, column].Text != "X")
+                    Positions hitPosition = ship.positions.FirstOrDefault(pos => pos.x == row && pos.y == column);
+                    if (hitPosition != null)
                     {
-                        foreach (Ship ship in PlayerShips)
+                        hitPosition.isHit = true;
+                        if (ship.IsDestroyed)
                         {
-                            Positions hitPosition = ship.positions.FirstOrDefault(pos => pos.x == row && pos.y == column);
-                            if (hitPosition != null)
+                            isDestroyed = true;
+                        }
+
+                        bool allDestroyed = PlayerShips.All(ship => ship.IsDestroyed);
+                        if (allDestroyed)
+                        {
+                            GameActionDTO gameActionCallback = new GameActionDTO
                             {
-                                System.Diagnostics.Debug.WriteLine("Ship hitted");
-                                hitPosition.isHit = true;
-/*                                if (ship.IsDestroyed)
-                                {
-                                    System.Diagnostics.Debug.WriteLine("Ship destroyed -- Checkfield");
-                                }*/
+                                row = 0,
+                                column = 0,
+                                gameState = GameState.Finished,
+                                gameAction = GameAction.End,
+                            };
 
-                                bool allDestroyed = PlayerShips.All(ship => ship.IsDestroyed);
-                                if (allDestroyed)
-                                {
-                                    GameActionDTO gameActionCallback = new GameActionDTO
-                                    {
-                                        row = 0,
-                                        column = 0,
-                                        gameState = GameState.Finished,
-                                        gameAction = GameAction.End,
-                                    };
-
-                                    System.Diagnostics.Debug.WriteLine("Znisczono wszystkie statki");
-                                    _gamestate = GameState.Finished;
-                                    SendGameData(gameActionCallback);
-                                    GameFinished(context, "Przegrałeś");
-                                    //GameFinished(context, "Przegrałeś");
-
-                                }
-
-
-
-
-
-                                }
-                            }
-                        myTextViews[row, column].SetBackgroundResource(Resource.Drawable.cellShooted);
-                        myTextViews[row, column].Text = "X";
+                            GameFinished(context, "Przegrałeś");
+                            SendGameData(gameActionCallback);
+                            _gamestate = GameState.Finished;
+                        }
                     }
+                }
+                RunOnUiThread(() =>{
+                    myTextViews[row, column].SetBackgroundResource(Resource.Drawable.cellShooted);
+                    myTextViews[row, column].Text = "X";
                 });
+
+            }
             return true;
         }
 
 
 
-        private void UpdateFieldCallback(Context context, int row, int column, bool isshooted)
+        private void UpdateFieldCallback(Context context, int row, int column, bool isshooted, bool isDestroyed)
         {
             ((Activity)context).RunOnUiThread(() =>
             {
@@ -658,10 +638,19 @@ namespace XamarinV2
                         textViews[row, column].SetBackgroundResource(Resource.Drawable.cell_clicked);
                         textViews[row, column].Text = "X";
                         _turnText.Text = "Tura przeciwnika";
+                        if (isDestroyed == true)
+                        {
+                            Toast.MakeText(context, "Zniszczono statek", ToastLength.Short).Show();
+                        } else
+                        {
+                            Toast.MakeText(context, "Trafiono statek", ToastLength.Short).Show();
+                        }
+
                         return;
                     }
                     textViews[row, column].Text = "X";
                     _turnText.Text = "Tura przeciwnika";
+                    Toast.MakeText(context, "Pudło", ToastLength.Short).Show();
                     playerState = PlayerState.Waiting;
                 }
             });      
@@ -718,6 +707,26 @@ namespace XamarinV2
             alertDialog.Show();
         }
 
+        private void ShowProgressWindow()
+        {
+            RunOnUiThread(() =>
+            {
+                progressDialog = new ProgressDialog(this);
+                progressDialog.SetMessage("Oczekiwanie na decyzję gracza...");
+                progressDialog.SetCancelable(false);
+                progressDialog.SetButton("Anuluj", (sender, args) =>
+                {
+                    CloseBluetoothSocket();
+                    Intent intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+
+                    intent.SetFlags(ActivityFlags.ClearTop);
+                    progressDialog.Dismiss();
+                    StartActivity(intent);
+                    Finish();
+                });
+                progressDialog.Show();
+            });
+        }
 
         private void FinishedDialogShow(string status)
         {
@@ -740,10 +749,12 @@ namespace XamarinV2
 
                 if (isOtherPlayerWantPlayAgain)
                 {
-
                     RestartGame();
+                } else
+                {
+                    ShowProgressWindow();
                 }
-
+             
             });
 
             alertDialogBuilder.SetNegativeButton("Nie", (senderAlert, args) =>
@@ -840,6 +851,10 @@ namespace XamarinV2
             isOtherPlayerWantPlayAgain = true;
             if (wantPlayAgain)
             {
+                if (progressDialog.IsShowing)
+                {
+                    progressDialog.Dismiss();
+                }
                 RestartGame();
             }
         }
@@ -890,7 +905,10 @@ namespace XamarinV2
                                        
                                     });
 
-                                    bool Checked = CheckField(context, receivedObject.row, receivedObject.column);
+                                    bool shipDestroyedInformation;
+                                    bool Checked = CheckField(context, receivedObject.row, receivedObject.column, out shipDestroyedInformation);
+                                System.Diagnostics.Debug.WriteLine($"Czy zniszczono - {shipDestroyedInformation}");    
+
                                 if (_gamestate != GameState.Finished)
                                 {
                                     GameActionDTO gameActionCallback = new GameActionDTO
@@ -899,6 +917,7 @@ namespace XamarinV2
                                         column = receivedObject.column,
                                         gameState = GameState.PlayingPhase,
                                         gameAction = GameAction.Callback,
+                                        isShipDestroyed = shipDestroyedInformation,
                                     };
 
                                     if (Checked)
@@ -915,7 +934,7 @@ namespace XamarinV2
                                 // SendGameData(gameActionCallback);
                             } else if(receivedObject.gameAction == GameAction.Callback)
                                 {
-                                    UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
+                                    UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback, receivedObject.isShipDestroyed);
                                 } else if(receivedObject.gameAction == GameAction.PlayerAction)
                                 {
                                     OtherPlayerReady(context);
@@ -1004,8 +1023,8 @@ namespace XamarinV2
                                         _turnText.Text = "Your turn";
 
                                     });
-
-                                    bool Checked = CheckField(context, receivedObject.row, receivedObject.column);
+                                    bool shipDestroyed = false;
+                                    bool Checked = CheckField(context, receivedObject.row, receivedObject.column, out shipDestroyed);
                                     GameActionDTO gameActionCallback = new GameActionDTO
                                     {
                                         row = receivedObject.row,
@@ -1027,7 +1046,7 @@ namespace XamarinV2
                                 }
                                 else if (receivedObject.gameAction == GameAction.Callback)
                                 {
-                                    UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
+                                    //UpdateFieldCallback(context, receivedObject.row, receivedObject.column, receivedObject.isShootedCallback);
                                 }
                                 else if (receivedObject.gameAction == GameAction.PlayerAction)
                                 {
