@@ -20,5 +20,6 @@ namespace XamarinV2.DTO
         public GameState gameState;
         public GameAction gameAction;
         public bool isShootedCallback = false;
+        public bool isShipDestroyed = false;
     }
 }
