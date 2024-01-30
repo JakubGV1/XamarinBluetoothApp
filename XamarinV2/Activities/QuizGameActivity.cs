@@ -57,10 +57,11 @@ namespace XamarinV2
         private bool isCategoryChosen;
 
         private int currentQuestion;
-        private int maxQuestions = 3;
+        private int maxQuestions = 2;
 
-        private int correctAnswersCount;
-        private int rounds;
+        private int correctAnswersThisRound;
+        private int totalCorrectAnswersCount;
+        private int rounds = 2;
         private int currentRound;
 
         private readonly Random random = new Random();
@@ -143,10 +144,13 @@ namespace XamarinV2
             currentCategory = null;
             previousCategories = new List<Category>();
             currentCategoriesToChoose = new List<Category>();
-            rounds = 3;
+            correctAnswersThisRound = 0;
+            totalCorrectAnswersCount = 0;
             currentRound = 1;
             currentQuestion = 0;
             LoadQuestions();
+            questionText.Text = "";
+            statusText.Text = "";
         }
 
         private void LoadQuestions()
@@ -167,21 +171,37 @@ namespace XamarinV2
 
         private void ShowCategoryMenu()
         {
-            questionText.Text = "";
-            statusText.Text = "Wybierz kategorię";
-            thirdButton.Visibility = ViewStates.Invisible;
-            fourthButton.Visibility = ViewStates.Invisible;
-            currentCategoriesToChoose.Clear();
-            currentCategoriesToChoose = drawRandomCategories();
-            firstButton.Text = currentCategoriesToChoose[0].CategoryName;
-            secondButton.Text = currentCategoriesToChoose[1].CategoryName;
+            if (currentRound <= rounds)
+            {
+                questionText.Text = "Wybierz kategorię";
+                //statusText.Text = "Wybierz kategorię";
+                thirdButton.Visibility = ViewStates.Invisible;
+                fourthButton.Visibility = ViewStates.Invisible;
+                currentCategoriesToChoose.Clear();
+                currentCategoriesToChoose = drawRandomCategories();
+                firstButton.Text = currentCategoriesToChoose[0].CategoryName;
+                secondButton.Text = currentCategoriesToChoose[1].CategoryName;
+                correctAnswersThisRound = 0;
+                currentQuestion = 0;
+            } else
+            {
+                ShowEndResults();
+            }
+        }
+        private void ShowEndResults()
+        {
+            buttonsGroup.Visibility = ViewStates.Gone;
+            statusText.Text = "";
+            questionText.Text = $"W całym quizie uzyskałeś {totalCorrectAnswersCount} pkt";
         }
 
         private void WaitingForCategory()
         {
-            statusText.Text = "Oczekiwanie na wybór kategorii...";
-            questionText.Text = "";
+            statusText.Text = $"W kategorii {currentCategory.CategoryName} uzyskałeś {correctAnswersThisRound} pkt!";
+            questionText.Text = "Oczekiwanie na wybór nowej kategorii...";
             buttonsGroup.Visibility = ViewStates.Invisible;
+            correctAnswersThisRound = 0;
+            currentQuestion = 0;
         }
 
         private void ButtonClick(int buttonIndex)
@@ -191,22 +211,43 @@ namespace XamarinV2
                 System.Diagnostics.Debug.WriteLine($"Wybrano: {currentCategoriesToChoose[buttonIndex].CategoryName}");
                 currentCategory = currentCategoriesToChoose[buttonIndex];
                 previousCategories.Add(currentCategory);
+
+                foreach(var ain in currentCategory.Questions)
+                {
+                    System.Diagnostics.Debug.WriteLine("Pytania: " + ain.QuestionText);
+                    foreach(var nextin in ain.Answers)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Odpowiedź: " + nextin.Text +" - is correct?" + nextin.IsCorrect);
+                    }
+                }
                 ShowQuestions(currentCategory);
             } else
             {
-                if(currentQuestion <= maxQuestions)
+                if(currentQuestion < maxQuestions)
                 {
+
+                    System.Diagnostics.Debug.WriteLine($"Pytanie? : {currentCategory.Questions[currentQuestion].Answers[buttonIndex].Text} - {currentCategory.Questions[currentQuestion].Answers[buttonIndex].IsCorrect})");
+                    if (currentCategory.Questions[currentQuestion].Answers[buttonIndex].IsCorrect)
+                    {
+                        RunOnUiThread(() => {
+                            Toast.MakeText(this, "Poprawna odpowiedź", ToastLength.Short).Show();
+                        });
+                        correctAnswersThisRound++;
+                    } else
+                    {
+                        RunOnUiThread(() => {
+                            Toast.MakeText(this, "Błędna odpowiedź", ToastLength.Short).Show();
+                        });
+                    }
+                    currentQuestion++;
                     ShowQuestions(currentCategory);
-                } else
-                {
-             
                 }
             }
         }
 
         private void ShowQuestions(Category category)
         {
-            if (currentQuestion <= maxQuestions)
+            if (currentQuestion < maxQuestions)
             {
 
                 Question currentQuestionObject = category.Questions[currentQuestion];
@@ -229,9 +270,14 @@ namespace XamarinV2
                     secondButton.Text = numberOfAnswers > 1 ? currentQuestionObject.Answers[1].Text : string.Empty;
                     thirdButton.Text = numberOfAnswers > 2 ? currentQuestionObject.Answers[2].Text : string.Empty;
                     fourthButton.Text = numberOfAnswers > 3 ? currentQuestionObject.Answers[3].Text : string.Empty;
-
-                    currentQuestion++;
                 });
+            } else
+            {
+                    statusText.Text = $"W kategorii {currentCategory.CategoryName} uzyskałeś {correctAnswersThisRound} pkt!";
+                    currentCategory = null;
+                    totalCorrectAnswersCount += correctAnswersThisRound;
+                    currentRound++;
+                    ShowCategoryMenu();
             }
         }
 
@@ -248,6 +294,20 @@ namespace XamarinV2
                 shuffledCategories = questionsDatabase.OrderBy(x => random.Next()).ToList();
                 selectedCategories = shuffledCategories.Take(2).ToList();
             }
+
+            foreach (var category in selectedCategories)
+            {
+                var shuffledQuestions = category.Questions.OrderBy(x => random.Next()).ToList();
+                var selectedQuestions = shuffledQuestions.Take(2).ToList();
+
+                foreach (var question in selectedQuestions)
+                {
+                    question.Answers = question.Answers.OrderBy(x => random.Next()).ToList();
+                }
+
+                category.Questions = selectedQuestions;
+            }
+
 
             return selectedCategories;
         }

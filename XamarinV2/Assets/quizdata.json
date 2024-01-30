@@ -1,14 +1,14 @@
 ﻿[
   {
     "Id": 1,
-    "CategoryName": "General Knowledge",
+    "CategoryName": "Stolice świata",
     "Questions": [
       {
         "Id": 1,
-        "QuestionText": "What is the capital of France?",
+        "QuestionText": "Co jest stolicą Francji?",
         "Answers": [
           {
-            "Text": "Paris",
+            "Text": "Paryż",
             "IsCorrect": true
           },
           {
@@ -19,54 +19,66 @@
       },
       {
         "Id": 2,
-        "QuestionText": "Which planet is known as the Red Planet?",
+        "QuestionText": "Które miasto jest stolicą Włoch?",
         "Answers": [
           {
-            "Text": "Mars",
+            "Text": "Rzym",
             "IsCorrect": true
           },
           {
-            "Text": "Venus",
+            "Text": "Mediolan",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Florencja",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Neapol",
             "IsCorrect": false
           }
         ]
       },
       {
         "Id": 3,
-        "QuestionText": "Test question number 3",
+        "QuestionText": "Jaka jest stolica Japonii?",
         "Answers": [
           {
-            "Text": "Mars",
+            "Text": "Tokio",
             "IsCorrect": true
           },
           {
-            "Text": "Venus",
+            "Text": "Osaka",
             "IsCorrect": false
           },
           {
-            "Text": "Pluton",
+            "Text": "Kioto",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Jokohama",
             "IsCorrect": false
           }
         ]
       },
       {
         "Id": 4,
-        "QuestionText": "Lulowo",
+        "QuestionText": "Które miasto jest stolicą Kanady?",
         "Answers": [
           {
-            "Text": "Mars",
+            "Text": "Ottawa",
             "IsCorrect": true
           },
           {
-            "Text": "Venus",
+            "Text": "Toronto",
             "IsCorrect": false
           },
           {
-            "Text": "Pluton",
+            "Text": "Montreal",
             "IsCorrect": false
           },
           {
-            "Text": "Saturn",
+            "Text": "Vancouver",
             "IsCorrect": false
           }
         ]
@@ -101,6 +113,216 @@
           },
           {
             "Text": "Isaac Newton",
+            "IsCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Id": 3,
+    "CategoryName": "Historia Średniowieczna",
+    "Questions": [
+      {
+        "Id": 1,
+        "QuestionText": "Kto był pierwszym królem Polski?",
+        "Answers": [
+          {
+            "Text": "Bolesław Chrobry",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Mieszko I",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Kazimierz Wielki",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Władysław Jagiełło",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "QuestionText": "W którym roku odbyła się bitwa pod Grunwaldem?",
+        "Answers": [
+          {
+            "Text": "1410",
+            "IsCorrect": true
+          },
+          {
+            "Text": "1569",
+            "IsCorrect": false
+          },
+          {
+            "Text": "1655",
+            "IsCorrect": false
+          },
+          {
+            "Text": "1795",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "QuestionText": "Które wydarzenie uważa się za początek okresu średniowiecza?",
+        "Answers": [
+          {
+            "Text": "Upadek Cesarstwa Rzymskiego",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Bitwa pod Hastings",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Bitwa pod Azincourt",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Koronacja Karola Wielkiego",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "QuestionText": "Kto był królem Anglii podczas Wojny Stuletniej?",
+        "Answers": [
+          {
+            "Text": "Edward III",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Henryk V",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Ryszard III",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Jakub I",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 5,
+        "QuestionText": "Gdzie znajdowała się siedziba Wielkiego Mistrza zakonu templariuszy?",
+        "Answers": [
+          {
+            "Text": "W Paryżu",
+            "IsCorrect": true
+          },
+          {
+            "Text": "W Londynie",
+            "IsCorrect": false
+          },
+          {
+            "Text": "W Rzymie",
+            "IsCorrect": false
+          },
+          {
+            "Text": "W Jerozolimie",
+            "IsCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Id": 4,
+    "CategoryName": "Fizyka",
+    "Questions": [
+      {
+        "Id": 1,
+        "QuestionText": "Co to jest siła grawitacyjna?",
+        "Answers": [
+          {
+            "Text": "Siła przyciągająca obiekty z masą",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Siła tarcia",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Siła wyporu",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Siła elektrostatyczna",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "QuestionText": "Jakie są trzy prawa ruchu Newtona?",
+        "Answers": [
+          {
+            "Text": "Pierwsze: ciało pozostaje w spoczynku lub porusza się ruchem jednostajnym prostoliniowym, dopóki na nie nie działa siła zewnętrzna. Drugie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało i zachodzi w kierunku tej siły. Trzecie: każde działanie ma reakcję o równych wartościach i skierowane w przeciwnym kierunku.",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Pierwsze: ciało pozostaje w spoczynku. Drugie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało. Trzecie: każde działanie ma reakcję o równych wartościach.",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Pierwsze: ciało porusza się ruchem jednostajnym prostoliniowym. Drugie: zmiana pędu ciała jest proporcjonalna do przyspieszenia. Trzecie: każde ciało naładowane elektrycznie przyciąga się.",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Pierwsze: ciało porusza się ruchem jednostajnym prostoliniowym. Drugie: każde działanie ma reakcję o równych wartościach. Trzecie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało.",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "QuestionText": "Co to jest prąd elektryczny?",
+        "Answers": [
+          {
+            "Text": "Ruch ładunków elektrycznych",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Siła magnetyczna",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Opór elektryczny",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Napięcie elektryczne",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "QuestionText": "Ile wynosi prędkość światła?",
+        "Answers": [
+          {
+            "Text": "299,792,458 metrów na sekundę",
+            "IsCorrect": true
+          },
+          {
+            "Text": "150,000,000 metrów na sekundę",
+            "IsCorrect": false
+          },
+          {
+            "Text": "200,000,000 metrów na sekundę",
+            "IsCorrect": false
+          },
+          {
+            "Text": "250,000,000 metrów na sekundę",
             "IsCorrect": false
           }
         ]
