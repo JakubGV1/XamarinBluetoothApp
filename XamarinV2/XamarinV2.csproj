@@ -66,12 +66,17 @@
   <ItemGroup>
     <Compile Include="Activities\DiscoveredDevices2.cs" />
     <Compile Include="Activities\GameActivity2.cs" />
+    <Compile Include="Activities\GameSelectionActivity.cs" />
+    <Compile Include="Activities\QuizGameActivity.cs" />
     <Compile Include="BluetoothReceiver.cs" />
     <Compile Include="CustomBluetooth.cs" />
     <Compile Include="Activities\DiscoveredDevicesActivity.cs" />
     <Compile Include="DTO\GameActionDTO.cs" />
     <Compile Include="DTO\GameData.cs" />
+    <Compile Include="Entities\Answer.cs" />
+    <Compile Include="Entities\Category.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Question.cs" />
     <Compile Include="Entities\Ship.cs" />
     <Compile Include="Enums\GameAction.cs" />
     <Compile Include="Enums\GameState.cs" />
@@ -176,6 +181,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\selection_menu.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\quiz_game.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="Assets\quizdata.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

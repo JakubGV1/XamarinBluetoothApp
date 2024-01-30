@@ -1,0 +1,110 @@
+﻿[
+  {
+    "Id": 1,
+    "CategoryName": "General Knowledge",
+    "Questions": [
+      {
+        "Id": 1,
+        "QuestionText": "What is the capital of France?",
+        "Answers": [
+          {
+            "Text": "Paris",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Berlin",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "QuestionText": "Which planet is known as the Red Planet?",
+        "Answers": [
+          {
+            "Text": "Mars",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Venus",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "QuestionText": "Test question number 3",
+        "Answers": [
+          {
+            "Text": "Mars",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Venus",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Pluton",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "QuestionText": "Lulowo",
+        "Answers": [
+          {
+            "Text": "Mars",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Venus",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Pluton",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Saturn",
+            "IsCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Id": 2,
+    "CategoryName": "Science",
+    "Questions": [
+      {
+        "Id": 3,
+        "QuestionText": "What is the chemical symbol for water?",
+        "Answers": [
+          {
+            "Text": "H2O",
+            "IsCorrect": true
+          },
+          {
+            "Text": "CO2",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "QuestionText": "Who developed the theory of relativity?",
+        "Answers": [
+          {
+            "Text": "Albert Einstein",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Isaac Newton",
+            "IsCorrect": false
+          }
+        ]
+      }
+    ]
+  }
+]

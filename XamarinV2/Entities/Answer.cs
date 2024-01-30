@@ -9,16 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace XamarinV2.Enums
+namespace XamarinV2.Entities
 {
-    public enum GameAction
+    public class Answer
     {
-        PlayerAction,
-        Callback,
-        Shot,
-        Ready,
-        End,
-        PlayAgain,
-        ChoseCategory,
+        public string Text { get; set; }
+        public bool IsCorrect { get; set; }
     }
 }

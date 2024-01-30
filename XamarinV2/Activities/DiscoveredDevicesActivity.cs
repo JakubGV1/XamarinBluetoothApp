@@ -140,7 +140,7 @@ namespace XamarinV2
 
         private void BackButton()
         {
-            Intent intent = new Intent(this, typeof(MainActivity));
+            Intent intent = new Intent(this, typeof(GameSelectionActivity));
             intent.SetFlags(ActivityFlags.ClearTop);
             StartActivity(intent);
             Finish();

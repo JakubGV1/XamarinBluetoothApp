@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+
+        <TextView
+        android:id="@+id/menuName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/selectionMenu"
+        android:textSize="25sp"
+        android:textColor="#000"
+        android:gravity="center"
+        android:layout_marginBottom="5dp"
+        />
+
+    <Button
+        android:id="@+id/btnBattleships"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="100dp"
+        android:text="@string/BattleShipsName" 
+        android:layout_below="@+id/menuName"/>
+
+        <Button
+        android:id="@+id/btnQuiz"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="100dp"
+        android:text="@string/QuizName" 
+        android:layout_below="@+id/btnBattleships"/>
+
+        <Button
+        android:id="@+id/btnThird"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="70dp"
+        android:layout_marginRight="70dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="100dp"
+        android:text="@string/thirdGame" 
+        android:layout_below="@+id/btnQuiz"/>
+
+       <Button
+        android:id="@+id/btnBackSelect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/back_button" 
+        android:layout_alignParentBottom="true"
+      />
+
+</RelativeLayout>

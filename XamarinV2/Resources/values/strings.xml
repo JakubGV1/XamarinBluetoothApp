@@ -8,4 +8,8 @@
 	<string name="scan_button">Skanuj</string>
 	<string name="host_button">Hostuj</string>	
 	<string name="ownTable">Twoja tabela</string>
+	<string name="selectionMenu">Wybór gry</string>
+	<string name="BattleShipsName">Statki</string>
+	<string name="QuizName">Quiz</string>
+	<string name="thirdGame">Empty</string>
 </resources>

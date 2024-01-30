@@ -13,6 +13,7 @@ using Android.Bluetooth;
 using Android.Content;
 using Android.Widget;
 
+
 namespace XamarinV2
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
@@ -70,11 +71,8 @@ namespace XamarinV2
             {
                 SetupBluetooth();
             }
-            // _bluetoothAdapter.StartDiscovery();
-               var intent = new Intent(this, typeof(DiscoveredDevicesActivity));
-          //  var intent = new Intent(this, typeof(GameActivity));
-            intent.PutExtra("Game", "Statki");
-           // var intent = new Intent(this, typeof(GameActivity));
+            var intent = new Intent(this, typeof(GameSelectionActivity));
+            
             StartActivity(intent);
 
         }
