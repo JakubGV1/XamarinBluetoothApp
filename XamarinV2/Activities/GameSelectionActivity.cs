@@ -28,11 +28,11 @@ namespace XamarinV2
 
             Button btnQuiz = FindViewById<Button>(Resource.Id.btnQuiz);
             btnQuiz.Click += (sender, e) => {
-                // ChangeActivity("Quiz");
-                Intent intent = new Intent(this, typeof(QuizGameActivity));
-                intent.SetFlags(ActivityFlags.ClearTop);
-                StartActivity(intent);
-                Finish();
+                 ChangeActivity("Quiz");
+        //        Intent intent = new Intent(this, typeof(QuizGameActivity));
+          //      intent.SetFlags(ActivityFlags.ClearTop);
+            //    StartActivity(intent);
+              //  Finish();
             };
             Button btnThird = FindViewById<Button>(Resource.Id.btnThird);
             btnThird.Click += (sender, e) => {

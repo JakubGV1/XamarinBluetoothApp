@@ -61,10 +61,23 @@ namespace XamarinV2
 
         private int correctAnswersThisRound;
         private int totalCorrectAnswersCount;
+
+        private int otherPlayerCorrectAnswers;
+
         private int rounds = 2;
         private int currentRound;
 
         private readonly Random random = new Random();
+
+        private ProgressDialog progressDialog;
+        private bool isOtherPlayerWantPlayAgain;
+        private bool wantPlayAgain;
+
+        private bool isPlayerFinished;
+        private bool isOtherPlayerFinished;
+
+        private bool isOtherPlayerFinishedAnswers;
+        private bool isPlayerAnswered;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -73,44 +86,46 @@ namespace XamarinV2
 
             _activity = this;
 
-            Initialize();
-            ShowCategoryMenu();
+           RunOnUiThread(() =>
+            {
+                Initialize();
 
+            });
 
             string connectedDevice = Intent.GetStringExtra("Connected-Device");
             if (CustomBluetooth.Instance.GetConnectedSocket() != null && connectedDevice != null)
             {
+                playerConnectInfo = connectedDevice;
+                if (connectedDevice == "Host")
+                {
+                    playerState = PlayerState.Turn;
+                    RunOnUiThread(() =>
+                    {
+                        ShowCategoryMenu();
+                    });
+                }
+                else
+                {
+                    playerState = PlayerState.Waiting;
+                    RunOnUiThread(() =>
+                    {
+
+                        WaitingForCategory();
+                    });
+                }
                 _connectedSocket = CustomBluetooth.Instance.GetConnectedSocket();
                 if (_connectedSocket != null && _connectedSocket.IsConnected)
                 {
                     isConnection = true;
                     Task.Run(() => HandleSocketInput(this, _connectedSocket));
-                    Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
-
-                    playerConnectInfo = connectedDevice;
-                    if (connectedDevice == "Host")
-                    {
-                        playerState = PlayerState.Turn;
-                        RunOnUiThread(() =>
-                        {
-                            ShowCategoryMenu();
-                        });
-                    }
-                    else
-                    {
-                        playerState = PlayerState.Waiting;
-                        RunOnUiThread(() =>
-                        {
-                            WaitingForCategory();
-                        });
-                    }
+                    //Task.Run(() => HandleSocketInput2(this, _connectedSocket));
+                    //Toast.MakeText(this, "Nawiązano połączenie", ToastLength.Short).Show();
                 }
             }
         }
 
         private void Initialize()
         {
-
             firstButton = FindViewById<Button>(Resource.Id.btnFirstQ);
             firstButton.Click += (sender, e) =>
             {
@@ -140,6 +155,12 @@ namespace XamarinV2
             statusText = FindViewById<TextView>(Resource.Id.statusText);
             questionText = FindViewById<TextView>(Resource.Id.QuestionText);
             buttonsGroup = FindViewById<LinearLayout>(Resource.Id.groupButtons);
+            DefaultValues();
+            LoadQuestions();
+        }
+
+        private void DefaultValues()
+        {
             isCategoryChosen = false;
             currentCategory = null;
             previousCategories = new List<Category>();
@@ -148,10 +169,55 @@ namespace XamarinV2
             totalCorrectAnswersCount = 0;
             currentRound = 1;
             currentQuestion = 0;
-            LoadQuestions();
+            otherPlayerCorrectAnswers = 0;
             questionText.Text = "";
             statusText.Text = "";
+            isOtherPlayerFinishedAnswers = false;
+            isPlayerAnswered = false;
         }
+
+
+        public override void OnBackPressed()
+        {
+            // Show a confirmation dialog
+            ShowConfirmationDialog();
+        }
+
+        private void ShowConfirmationDialog()
+        {
+            AndroidX.AppCompat.App.AlertDialog.Builder alertDialogBuilder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
+            alertDialogBuilder.SetMessage("Czy chcesz wyjść?");
+            alertDialogBuilder.SetCancelable(false);
+
+            alertDialogBuilder.SetPositiveButton("Tak", (senderAlert, args) =>
+            {
+                // Close the Bluetooth socket or handle other cleanup actions
+                //CloseBluetoothSocket(); // Adjust the method name based on your requirements
+
+                // Finish the activity
+                CloseBluetoothSocket();
+
+                Intent intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+
+                // Set the flags to clear the activity stack
+                intent.SetFlags(ActivityFlags.ClearTop);
+                intent.PutExtra("Game", "Quiz");
+                // Start PreviousActivity
+                StartActivity(intent);
+
+                Finish();
+            });
+
+            alertDialogBuilder.SetNegativeButton("Nie", (senderAlert, args) =>
+            {
+                // If the user cancels, do nothing (or handle as needed)
+            });
+
+            // Create and show the dialog
+            AndroidX.AppCompat.App.AlertDialog alertDialog = alertDialogBuilder.Create();
+            alertDialog.Show();
+        }
+
 
         private void LoadQuestions()
         {
@@ -160,19 +226,15 @@ namespace XamarinV2
                 string jsonContent = streamReader.ReadToEnd();
                 questionsDatabase = JsonConvert.DeserializeObject<List<Category>>(jsonContent);
             }
-            if (questionsDatabase != null)
-            {
-                foreach(var category in questionsDatabase)
-                {
-                   System.Diagnostics.Debug.WriteLine("KATEGORIA !@:" + category.CategoryName);
-                }
-            }
         }
 
         private void ShowCategoryMenu()
         {
             if (currentRound <= rounds)
             {
+                buttonsGroup.Visibility = ViewStates.Visible;
+                isOtherPlayerFinishedAnswers = false;
+                isPlayerAnswered = false;
                 questionText.Text = "Wybierz kategorię";
                 //statusText.Text = "Wybierz kategorię";
                 thirdButton.Visibility = ViewStates.Invisible;
@@ -185,48 +247,125 @@ namespace XamarinV2
                 currentQuestion = 0;
             } else
             {
+                isPlayerFinished = true;
+                GameActionDTOQuiz gacdtoQuiz = new GameActionDTOQuiz
+                {
+                    gameAction = GameAction.Result,
+                    result = totalCorrectAnswersCount
+                };
+                SendGameData(gacdtoQuiz);
+
                 ShowEndResults();
             }
         }
+
+        private void WaitingForOtherPlayer()
+        {
+
+                if (isOtherPlayerFinishedAnswers && isPlayerAnswered)
+                {
+                    RunOnUiThread(() =>
+                    {
+                        ShowCategoryMenu();
+                    });
+                }
+                else
+                {
+                    if (isPlayerAnswered)
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            buttonsGroup.Visibility = ViewStates.Gone;
+                            questionText.Text = "Oczekiwanie aż przeciwnik odpowie na pytania...";
+                        });
+
+                    }
+                }
+            
+        }
+
+
         private void ShowEndResults()
         {
-            buttonsGroup.Visibility = ViewStates.Gone;
-            statusText.Text = "";
-            questionText.Text = $"W całym quizie uzyskałeś {totalCorrectAnswersCount} pkt";
+            RunOnUiThread(() =>
+            {
+                buttonsGroup.Visibility = ViewStates.Gone;
+                if (!isOtherPlayerFinished)
+                {
+                    statusText.Text = string.Empty;
+                    questionText.Text = "Oczekiwanie aż przeciwnik skończy quiz...";
+                }
+                else
+                {
+                    statusText.Text = string.Empty;
+                    questionText.Text = "Koniec quizu...";
+                    FinishedDialogShow();
+                }
+            });
         }
 
         private void WaitingForCategory()
         {
-            statusText.Text = $"W kategorii {currentCategory.CategoryName} uzyskałeś {correctAnswersThisRound} pkt!";
-            questionText.Text = "Oczekiwanie na wybór nowej kategorii...";
-            buttonsGroup.Visibility = ViewStates.Invisible;
-            correctAnswersThisRound = 0;
-            currentQuestion = 0;
+            if (currentRound <= rounds)
+            {
+                RunOnUiThread(() => { 
+                if (currentCategory != null)
+                    {
+                        statusText.Text = $"W kategorii {currentCategory.CategoryName} uzyskałeś {correctAnswersThisRound} pkt!";
+                    }
+                    questionText.Text = "Oczekiwanie na wybór nowej kategorii...";
+                    buttonsGroup.Visibility = ViewStates.Invisible;
+                    correctAnswersThisRound = 0;
+                    currentQuestion = 0;
+                });
+            } else
+            {
+                System.Diagnostics.Debug.WriteLine($"Rundy: {currentRound} / {rounds} ");
+                GameActionDTOQuiz gacdtoQuiz = new GameActionDTOQuiz
+                {
+                    gameAction = GameAction.Result,
+                    result = totalCorrectAnswersCount
+                };
+                SendGameData(gacdtoQuiz);
+                isPlayerFinished = true;
+                RunOnUiThread(() =>
+                {
+                    ShowEndResults();
+                });
+            }
+        }
+
+        private void OtherPlayerFinished()
+        {
+            isOtherPlayerFinished = true;
+            if (isPlayerFinished)
+            {
+                ShowEndResults();
+            }
         }
 
         private void ButtonClick(int buttonIndex)
         {
             if(currentCategory== null && playerState == PlayerState.Turn)
             {
-                System.Diagnostics.Debug.WriteLine($"Wybrano: {currentCategoriesToChoose[buttonIndex].CategoryName}");
                 currentCategory = currentCategoriesToChoose[buttonIndex];
                 previousCategories.Add(currentCategory);
 
-                foreach(var ain in currentCategory.Questions)
+                GameActionDTOQuiz GameActionQuiz = new GameActionDTOQuiz
                 {
-                    System.Diagnostics.Debug.WriteLine("Pytania: " + ain.QuestionText);
-                    foreach(var nextin in ain.Answers)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Odpowiedź: " + nextin.Text +" - is correct?" + nextin.IsCorrect);
-                    }
-                }
+                    ChosenCategory = currentCategory,
+                    gameAction = GameAction.ChoseCategory
+                };
+
+                SendGameData(GameActionQuiz);
+                playerState = PlayerState.Waiting;
                 ShowQuestions(currentCategory);
             } else
             {
                 if(currentQuestion < maxQuestions)
                 {
 
-                    System.Diagnostics.Debug.WriteLine($"Pytanie? : {currentCategory.Questions[currentQuestion].Answers[buttonIndex].Text} - {currentCategory.Questions[currentQuestion].Answers[buttonIndex].IsCorrect})");
+/*                    System.Diagnostics.Debug.WriteLine($"Pytanie? : {currentCategory.Questions[currentQuestion].Answers[buttonIndex].Text} - {currentCategory.Questions[currentQuestion].Answers[buttonIndex].IsCorrect})");*/
                     if (currentCategory.Questions[currentQuestion].Answers[buttonIndex].IsCorrect)
                     {
                         RunOnUiThread(() => {
@@ -247,6 +386,9 @@ namespace XamarinV2
 
         private void ShowQuestions(Category category)
         {
+            RunOnUiThread(() => {
+                buttonsGroup.Visibility = ViewStates.Visible;
+            });
             if (currentQuestion < maxQuestions)
             {
 
@@ -277,7 +419,59 @@ namespace XamarinV2
                     currentCategory = null;
                     totalCorrectAnswersCount += correctAnswersThisRound;
                     currentRound++;
-                    ShowCategoryMenu();
+                    if(playerState == PlayerState.Turn)
+                    {
+                        isPlayerAnswered = true;
+                        if(currentRound > rounds)
+                        {
+                        System.Diagnostics.Debug.WriteLine($"WAITNING: {currentRound} / {rounds}");
+                        
+                        isPlayerFinished = true;
+                        GameActionDTOQuiz gacdtoQuiz = new GameActionDTOQuiz
+                        {
+                            gameAction = GameAction.Result,
+                            result = totalCorrectAnswersCount
+                        };
+                        SendGameData(gacdtoQuiz);
+                        RunOnUiThread(() =>
+                        {
+                            ShowEndResults();
+                        });
+                    } else
+                        {
+                        WaitingForOtherPlayer();
+                        }
+                    } else
+                    {
+
+                    
+                        if(currentRound > rounds)
+                        {
+                        isPlayerFinished = true;
+                        GameActionDTOQuiz gacdtoQuiz = new GameActionDTOQuiz
+                        {
+                            gameAction = GameAction.Result,
+                            result = totalCorrectAnswersCount
+                        };
+                        SendGameData(gacdtoQuiz);
+                        RunOnUiThread(() =>
+                        {
+                            ShowEndResults();
+                        });
+                    } else
+                        {
+                        GameActionDTOQuiz gdtoquiz = new GameActionDTOQuiz
+                        {
+                            gameAction = GameAction.FinishedAnswers
+                        };
+                        SendGameData(gdtoquiz);
+                        //isPlayerAnswered = true;
+                        RunOnUiThread(() =>
+                        {
+                            WaitingForCategory();
+                        });
+                    }
+                    }
             }
         }
 
@@ -314,6 +508,104 @@ namespace XamarinV2
 
 
 
+        private void ShowProgressWindow()
+        {
+            RunOnUiThread(() =>
+            {
+                progressDialog = new ProgressDialog(this);
+                progressDialog.SetMessage("Oczekiwanie na decyzję gracza...");
+                progressDialog.SetCancelable(false);
+                progressDialog.SetButton("Anuluj", (sender, args) =>
+                {
+                    CloseBluetoothSocket();
+                    Intent intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+
+                    intent.SetFlags(ActivityFlags.ClearTop);
+                    progressDialog.Dismiss();
+                    intent.PutExtra("Game", "Quiz");
+                    StartActivity(intent);
+                    Finish();
+                });
+                progressDialog.Show();
+            });
+        }
+
+
+        private void FinishedDialogShow()
+        {
+            AndroidX.AppCompat.App.AlertDialog.Builder alertDialogBuilder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
+
+            string status = "";
+
+            if(otherPlayerCorrectAnswers > totalCorrectAnswersCount)
+            {
+                status = "Przegrałeś";
+            } else if(totalCorrectAnswersCount > otherPlayerCorrectAnswers)
+            {
+                status = "Wygrałeś";
+            } else
+            {
+                status = "Remis";
+            }
+
+            alertDialogBuilder.SetMessage($"{status}! Uzyskałeś {totalCorrectAnswersCount} pkt w całym Quizie, natomiast przeciwnik uzyskał {otherPlayerCorrectAnswers} pkt! \n Czy chcesz zagrać ponownie?");
+            alertDialogBuilder.SetCancelable(false);
+
+            alertDialogBuilder.SetPositiveButton("Tak", (senderAlert, args) =>
+            {
+                wantPlayAgain = true;
+                GameActionDTOQuiz gameActionCallback = new GameActionDTOQuiz
+                {
+                    gameAction = GameAction.PlayAgain,
+                };
+                SendGameData(gameActionCallback);
+
+                if (isOtherPlayerWantPlayAgain)
+                {
+                    RestartGame();
+                }
+                else
+                {
+                    ShowProgressWindow();
+                }
+
+            });
+
+            alertDialogBuilder.SetNegativeButton("Nie", (senderAlert, args) =>
+            {
+                CloseBluetoothSocket();
+                Intent intent = new Intent(this, typeof(DiscoveredDevicesActivity));
+
+                intent.SetFlags(ActivityFlags.ClearTop);
+                intent.PutExtra("Game", "Quiz");
+                StartActivity(intent);
+
+                Finish();
+            });
+
+            // Create and show the dialog
+            AndroidX.AppCompat.App.AlertDialog alertDialog = alertDialogBuilder.Create();
+            alertDialog.Show();
+        }
+
+        private void RestartGame()
+        {
+            DefaultValues();
+        }
+
+        private void GamePlayAgain()
+        {
+            isOtherPlayerWantPlayAgain = true;
+            if (wantPlayAgain)
+            {
+                if (progressDialog.IsShowing)
+                {
+                    progressDialog.Dismiss();
+                }
+                RestartGame();
+            }
+        }
+
         private void HandleSocketInput(Context context, BluetoothSocket socket)
         {
             bool isConnection = true;
@@ -330,13 +622,34 @@ namespace XamarinV2
                     if (bytesRead > 0)
                     {
                         string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        var receivedObject = JsonConvert.DeserializeObject<GameActionDTO>(receivedData);
+                        var receivedObject = JsonConvert.DeserializeObject<GameActionDTOQuiz>(receivedData);
                         
                         Array.Clear(buffer, 0, buffer.Length);
                         if (receivedObject != null)
                         {
-
-                            
+                          /*  System.Diagnostics.Debug.WriteLine("Otrzymano obiket: " + receivedObject.gameAction);*/
+                            if(receivedObject.gameAction == GameAction.ChoseCategory)
+                            {
+                                playerState = PlayerState.Turn;
+                                previousCategories.Add(receivedObject.ChosenCategory);
+                                currentCategory = receivedObject.ChosenCategory;
+                                RunOnUiThread(() =>
+                                {
+                                    ShowQuestions(currentCategory);
+                                });
+                            } else if(receivedObject.gameAction == GameAction.Result)
+                            {
+                                otherPlayerCorrectAnswers = receivedObject.result;
+                               
+                                OtherPlayerFinished();
+                            } else if(receivedObject.gameAction == GameAction.PlayAgain)
+                            {
+                                GamePlayAgain();
+                            } else if(receivedObject.gameAction == GameAction.FinishedAnswers)
+                            {
+                                isOtherPlayerFinishedAnswers = true;
+                                WaitingForOtherPlayer();
+                            }
                         }
                     }
                 }
@@ -359,8 +672,9 @@ namespace XamarinV2
         }
 
 
-        private void SendGameData(GameActionDTO gameActionDTO)
+        private void SendGameData(GameActionDTOQuiz gameActionDTO)
         {
+            System.Diagnostics.Debug.WriteLine("Wyslano ->:" + gameActionDTO.gameAction);
             if (_connectedSocket != null)
             {
                 try

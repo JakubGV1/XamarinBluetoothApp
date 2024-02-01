@@ -20,5 +20,7 @@ namespace XamarinV2.Enums
         End,
         PlayAgain,
         ChoseCategory,
+        FinishedAnswers,
+        Result,
     }
 }
