@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Planning Phase"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"/>
+
+        <TextView
+        android:id="@+id/QuestionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"
+        android:layout_below="@+id/statusText"/>
+
+    <LinearLayout
+        android:id="@+id/groupButtons"
+        android:layout_width="331.5dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnFirstQ"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""/>
+       <Button
+            android:id="@+id/btnSecondQ"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below ="@+id/btnFirstQ"
+            android:text=""/>
+      <Button
+            android:id="@+id/btnThirdQ"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+             android:layout_below ="@+id/btnSecondQ"
+            android:text=""/>
+      <Button
+            android:id="@+id/btnFourthQ"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below ="@+id/btnThirdQ"
+            android:text=""/>
+    
+    </LinearLayout>
+
+
+</LinearLayout>

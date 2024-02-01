@@ -71,6 +71,7 @@ namespace XamarinV2
             if (!string.IsNullOrEmpty(chosenGame))
             {
                 _chosenGame = chosenGame;
+                
             }
             else
             {
@@ -140,12 +141,25 @@ namespace XamarinV2
 
         private void BackButton()
         {
-            Intent intent = new Intent(this, typeof(MainActivity));
+            Intent intent = new Intent(this, typeof(GameSelectionActivity));
             intent.SetFlags(ActivityFlags.ClearTop);
             StartActivity(intent);
             Finish();
         }
 
+        public UUID GetSelectedGameUUID()
+        {
+            if (GamesUUID.TryGetValue(_chosenGame, out var selectedUUID))
+            {
+                return selectedUUID;
+            }
+            else
+            {
+                // Handle the case when the _chosenGame is not found
+                throw new ArgumentException("Invalid game selection.");
+                // or return a default UUID or handle it accordingly based on your requirements
+            }
+        }
 
         private void HandleDeviceClick(string selectedDevice)
         {
@@ -183,8 +197,9 @@ namespace XamarinV2
         {
                 try
                 {
-                    BluetoothSocket socket = device.CreateRfcommSocketToServiceRecord(GameUUID);
-                    ((Activity)context).RunOnUiThread(() =>
+                // BluetoothSocket socket = device.CreateRfcommSocketToServiceRecord(GameUUID);
+                BluetoothSocket socket = device.CreateRfcommSocketToServiceRecord(GetSelectedGameUUID());
+                ((Activity)context).RunOnUiThread(() =>
                     {
                         Toast.MakeText(context, "Łączenie...", ToastLength.Short).Show();
                     });
@@ -208,12 +223,23 @@ namespace XamarinV2
                 }
         }
 
-        private static void LeadToNewActivity(Context context, string type)
+        private void LeadToNewActivity(Context context, string type)
         {
-            var intent = new Intent(context, typeof(GameActivity));
-            intent.PutExtra("Connected-Device", type);
-            // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
-            context.StartActivity(intent);
+            if(_chosenGame == "Quiz")
+            {
+                System.Diagnostics.Debug.WriteLine("TUTAJ");
+                var intent = new Intent(context, typeof(QuizGameActivity));
+                intent.PutExtra("Connected-Device", type);
+                // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                context.StartActivity(intent);
+            }
+            else if(_chosenGame == "Statki")
+            {
+                var intent = new Intent(context, typeof(GameActivity));
+                intent.PutExtra("Connected-Device", type);
+                // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                context.StartActivity(intent);
+            }
         }
 
         private void StartHosting()
@@ -288,8 +314,8 @@ namespace XamarinV2
                 {
                     try
                     {
-                        serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GameUUID);
-
+                        // serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GameUUID);
+                        serverSocket = mBluetoothAdapter.ListenUsingRfcommWithServiceRecord("BluetoothGame", GetSelectedGameUUID());
                         while (isServerRunning)
                         {
                             BluetoothSocket socket = serverSocket.Accept();

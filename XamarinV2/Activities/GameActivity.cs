@@ -691,6 +691,7 @@ namespace XamarinV2
 
                 // Set the flags to clear the activity stack
                 intent.SetFlags(ActivityFlags.ClearTop);
+                intent.PutExtra("Game", "Statki");
                 // Start PreviousActivity
                 StartActivity(intent);
 
@@ -721,6 +722,7 @@ namespace XamarinV2
 
                     intent.SetFlags(ActivityFlags.ClearTop);
                     progressDialog.Dismiss();
+                    intent.PutExtra("Game", "Statki");
                     StartActivity(intent);
                     Finish();
                 });
@@ -764,6 +766,7 @@ namespace XamarinV2
 
                 // Set the flags to clear the activity stack
                 intent.SetFlags(ActivityFlags.ClearTop);
+                intent.PutExtra("Game", "Statki");
                 // Start PreviousActivity
                 StartActivity(intent);
 
@@ -968,6 +971,7 @@ namespace XamarinV2
                         // Set the flags to clear the activity stack
                         intent.SetFlags(ActivityFlags.ClearTop);
                         // Start PreviousActivity
+                        intent.PutExtra("Game", "Statki");
                         context.StartActivity(intent);
                         _activity.Finish();
                     });
