@@ -14,6 +14,10 @@
           {
             "Text": "Berlin",
             "IsCorrect": false
+          },
+          {
+            "Text": "Warszawa",
+            "IsCorrect": false
           }
         ]
       },
@@ -87,11 +91,11 @@
   },
   {
     "Id": 2,
-    "CategoryName": "Science",
+    "CategoryName": "Nauka",
     "Questions": [
       {
         "Id": 3,
-        "QuestionText": "What is the chemical symbol for water?",
+        "QuestionText": "Jaki jest symbol chemiczny dla wody?",
         "Answers": [
           {
             "Text": "H2O",
@@ -100,12 +104,20 @@
           {
             "Text": "CO2",
             "IsCorrect": false
+          },
+          {
+            "Text": "O2",
+            "IsCorrect": false
+          },
+          {
+            "Text": "NaCl",
+            "IsCorrect": false
           }
         ]
       },
       {
         "Id": 4,
-        "QuestionText": "Who developed the theory of relativity?",
+        "QuestionText": "Kto opracował teorię względności?",
         "Answers": [
           {
             "Text": "Albert Einstein",
@@ -113,6 +125,58 @@
           },
           {
             "Text": "Isaac Newton",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Niels Bohr",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Galileo Galilei",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 5,
+        "QuestionText": "Jaki jest symbol chemiczny dla złota?",
+        "Answers": [
+          {
+            "Text": "Au",
+            "IsCorrect": true
+          },
+          {
+            "Text": "Ag",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Fe",
+            "IsCorrect": false
+          },
+          {
+            "Text": "Cu",
+            "IsCorrect": false
+          }
+        ]
+      },
+      {
+        "Id": 6,
+        "QuestionText": "Ile protonów ma w swoim jądrze atom wodoru?",
+        "Answers": [
+          {
+            "Text": "1",
+            "IsCorrect": true
+          },
+          {
+            "Text": "2",
+            "IsCorrect": false
+          },
+          {
+            "Text": "3",
+            "IsCorrect": false
+          },
+          {
+            "Text": "0",
             "IsCorrect": false
           }
         ]
@@ -263,22 +327,22 @@
       },
       {
         "Id": 2,
-        "QuestionText": "Jakie są trzy prawa ruchu Newtona?",
+        "QuestionText": "Jaką jednostkę mierzymy siłę w układzie międzynarodowym?",
         "Answers": [
           {
-            "Text": "Pierwsze: ciało pozostaje w spoczynku lub porusza się ruchem jednostajnym prostoliniowym, dopóki na nie nie działa siła zewnętrzna. Drugie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało i zachodzi w kierunku tej siły. Trzecie: każde działanie ma reakcję o równych wartościach i skierowane w przeciwnym kierunku.",
+            "Text": "Newton",
             "IsCorrect": true
           },
           {
-            "Text": "Pierwsze: ciało pozostaje w spoczynku. Drugie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało. Trzecie: każde działanie ma reakcję o równych wartościach.",
+            "Text": "Watt",
             "IsCorrect": false
           },
           {
-            "Text": "Pierwsze: ciało porusza się ruchem jednostajnym prostoliniowym. Drugie: zmiana pędu ciała jest proporcjonalna do przyspieszenia. Trzecie: każde ciało naładowane elektrycznie przyciąga się.",
+            "Text": "Joule",
             "IsCorrect": false
           },
           {
-            "Text": "Pierwsze: ciało porusza się ruchem jednostajnym prostoliniowym. Drugie: każde działanie ma reakcję o równych wartościach. Trzecie: zmiana pędu ciała jest proporcjonalna do siły działającej na ciało.",
+            "Text": "Hertz",
             "IsCorrect": false
           }
         ]
