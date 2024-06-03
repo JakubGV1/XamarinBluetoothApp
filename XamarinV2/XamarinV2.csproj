@@ -69,6 +69,7 @@
     <Compile Include="Activities\GameSelectionActivity.cs" />
     <Compile Include="Activities\QuizGame.cs" />
     <Compile Include="Activities\QuizGameActivity.cs" />
+    <Compile Include="Activities\SequenceGameActivity.cs" />
     <Compile Include="BluetoothReceiver.cs" />
     <Compile Include="CustomBluetooth.cs" />
     <Compile Include="Activities\DiscoveredDevicesActivity.cs" />
