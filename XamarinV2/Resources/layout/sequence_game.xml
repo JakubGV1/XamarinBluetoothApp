@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Four TextViews with Text under each -->
+    <TextView
+        android:id="@+id/roundCounter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/roundCounter"
+        android:padding="8dp"/>
+
+    <TextView
+        android:id="@+id/pointsCounter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pointsCounter"
+        android:padding="8dp"/>
+
+    <TextView
+        android:id="@+id/comboCounter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/comboCounter"
+        android:padding="8dp"/>
+
+    <TextView
+        android:id="@+id/chanceCounter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/chanceCounter"
+        android:padding="8dp"/>
+
+    <!-- Centered TextView above the border -->
+    <TextView
+        android:id="@+id/sequenceStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sequenceStatus"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:padding="8dp"/>
+
+    <!-- TextView with border at the center with fixed height -->
+    <TextView
+        android:id="@+id/sequenceText"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@android:color/darker_gray"
+        android:text=""
+        android:textSize="26sp"
+        android:gravity="center"
+        android:padding="4dp"
+        android:textColor="@android:color/white"
+        android:layout_marginVertical="16dp"/>
+
+    <!-- Buttons arranged like a cross -->
+    <LinearLayout
+        android:id="@+id/sequenceButtonGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- First Row (Up Button) -->
+        <Button
+            android:id="@+id/upArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/upArrow"
+            android:textSize="36sp"
+            android:gravity="center"
+            android:layout_gravity="center"/>
+
+        <!-- Second Row (Left, Middle, Right Buttons) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/leftArrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/leftArrow"
+                android:textSize="28sp"
+                android:paddingBottom="16dp"
+                android:gravity="center"
+                android:layout_gravity="center"/>
+
+            <Button
+                android:id="@+id/middleArrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/middleArrow"
+                android:layout_marginHorizontal="16dp"
+                android:textSize="28sp"
+                
+                android:gravity="center"
+                android:layout_gravity="center"/>
+
+            <Button
+                android:id="@+id/rightArrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rightArrow"
+                android:textSize="28sp"
+                android:paddingBottom="16dp"
+                android:gravity="center"
+                android:layout_gravity="center"/>
+        </LinearLayout>
+
+        <!-- Third Row (Down Button) -->
+        <Button
+            android:id="@+id/downArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/downArrow"
+            android:textSize="28sp"
+            android:gravity="center"
+            android:layout_gravity="center"/>
+    </LinearLayout>
+</LinearLayout>

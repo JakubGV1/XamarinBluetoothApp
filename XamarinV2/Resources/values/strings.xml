@@ -3,7 +3,7 @@
     <string name="action_settings">Settings</string>
 	<string name="exit_button">Wyjście</string>
 	<string name="start_button">Start</string>
-	<string name="options">Opcje</string>
+	<string name="informations">Informacje</string>
 	<string name="back_button">Wróć</string>
 	<string name="scan_button">Skanuj</string>
 	<string name="host_button">Hostuj</string>	
@@ -11,5 +11,15 @@
 	<string name="selectionMenu">Wybór gry</string>
 	<string name="BattleShipsName">Statki</string>
 	<string name="QuizName">Quiz</string>
-	<string name="thirdGame">Empty</string>
+	<string name="SequenceGame">Sekwencje</string>
+	<string name="upArrow">↑</string>
+	<string name="downArrow">↓</string>
+	<string name="rightArrow">→</string>
+	<string name="leftArrow">←</string>
+	<string name="middleArrow">🔁</string>
+	<string name="pointsCounter">Punkty:</string>
+	<string name="roundCounter">Runda:</string>
+	<string name="comboCounter">Combo:</string>
+	<string name="chanceCounter">Szanse:</string>
+	<string name="sequenceStatus">Status-</string>
 </resources>

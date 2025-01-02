@@ -34,9 +34,9 @@ namespace XamarinV2
             //    StartActivity(intent);
               //  Finish();
             };
-            Button btnThird = FindViewById<Button>(Resource.Id.btnThird);
+            Button btnThird = FindViewById<Button>(Resource.Id.btnSequence);
             btnThird.Click += (sender, e) => {
-                // 
+                ChangeActivity("Sekwencje");
             };
 
             Button btnBackSelect = FindViewById<Button>(Resource.Id.btnBackSelect);

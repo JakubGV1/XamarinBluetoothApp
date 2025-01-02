@@ -54,6 +54,7 @@ namespace XamarinV2
         {
                 { "Statki", UUID.FromString("9b406827-5fd0-4046-99ad-060521820fb6") },
                 { "Quiz", UUID.FromString("d89ccc65-d79b-4cc9-9bcd-d8d516448f60") },
+                { "Sekwencje", UUID.FromString("a12bc34d-567e-8f90-abcd-1234567890ef") },
         };
 
         public string _chosenGame;
@@ -236,6 +237,12 @@ namespace XamarinV2
             else if(_chosenGame == "Statki")
             {
                 var intent = new Intent(context, typeof(GameActivity));
+                intent.PutExtra("Connected-Device", type);
+                // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                context.StartActivity(intent);
+            } else if(_chosenGame == "Sekwencje")
+            {
+                var intent = new Intent(context, typeof(SequenceGameActivity));
                 intent.PutExtra("Connected-Device", type);
                 // intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask | ActivityFlags.ClearTask);
                 context.StartActivity(intent);

@@ -33,9 +33,43 @@ namespace XamarinV2
             button1.Click += (sender, e) => {
                 OnDiscoverDevicesClick();
             };
-           // Button button2 = FindViewById<Button>(Resource.Id.)
+
+            Button exitButton = FindViewById<Button>(Resource.Id.exitButton);
+            exitButton.Click += (sender, e) => {
+                Exit();
+            };
+
+            Button informationButton = FindViewById<Button>(Resource.Id.informationButton);
+            informationButton.Click += (sender, e) =>
+            {
+                ShowInformations();
+            };
+            // Button button2 = FindViewById<Button>(Resource.Id.)
         }
 
+        private void ShowInformations()
+        {
+            AndroidX.AppCompat.App.AlertDialog.Builder alertDialogBuilder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
+            alertDialogBuilder.SetTitle("Informacje o aplikacji");
+            alertDialogBuilder.SetMessage("Aplikacja stworzona na potrzeby pracy magisterskiej na seminarium Systemy multimedialne pod kierunkiem dr. Viktora Melnyka. Aplikacja zawiera 3 gry - statki, quizy oraz sekwencję.");
+            alertDialogBuilder.SetCancelable(true);
+
+            alertDialogBuilder.SetNegativeButton("Ok", (senderAlert, args) =>
+            {
+                // If the user cancels, do nothing (or handle as needed)
+                alertDialogBuilder.Dispose();
+            });
+
+            // Create and show the dialog
+            AndroidX.AppCompat.App.AlertDialog alertDialog = alertDialogBuilder.Create();
+            alertDialog.Show();
+        }
+
+        private void Exit()
+        {
+            Finish();
+            Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+        }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
