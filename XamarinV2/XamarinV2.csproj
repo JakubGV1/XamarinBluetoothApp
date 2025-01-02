@@ -69,11 +69,13 @@
     <Compile Include="Activities\GameSelectionActivity.cs" />
     <Compile Include="Activities\QuizGame.cs" />
     <Compile Include="Activities\QuizGameActivity.cs" />
+    <Compile Include="Activities\SequenceGameActivity.cs" />
     <Compile Include="BluetoothReceiver.cs" />
     <Compile Include="CustomBluetooth.cs" />
     <Compile Include="Activities\DiscoveredDevicesActivity.cs" />
     <Compile Include="DTO\GameActionDTO.cs" />
     <Compile Include="DTO\GameActionDTOQuiz.cs" />
+    <Compile Include="DTO\GameActionDTOSequence.cs" />
     <Compile Include="DTO\GameData.cs" />
     <Compile Include="Entities\Answer.cs" />
     <Compile Include="Entities\Category.cs" />
@@ -197,7 +199,9 @@
   <ItemGroup>
     <AndroidAsset Include="Assets\quizdata.json" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\sequence_game.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
     Other similar extension points exist, see Microsoft.Common.targets.

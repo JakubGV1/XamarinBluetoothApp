@@ -22,5 +22,6 @@ namespace XamarinV2.Enums
         ChoseCategory,
         FinishedAnswers,
         Result,
+        SequenceSend,
     }
 }

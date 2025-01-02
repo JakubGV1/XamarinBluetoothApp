@@ -3,32 +3,38 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnDiscoverDevices"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/start_button"
-        android:layout_above="@+id/testButton"
-        android:layout_marginBottom="10dp" 
-    />
+        android:orientation="vertical"
+        android:layout_centerInParent="true">
+
+        <Button
+            android:id="@+id/btnDiscoverDevices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/start_button"
+            android:layout_marginBottom="10dp" 
+            
+        />
+
+        <Button
+            android:id="@+id/exitButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/exit_button"
+        />
+    </LinearLayout>
 
     <Button
-        android:id="@+id/testButton"
+        android:id="@+id/informationButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/options"
-        android:layout_centerInParent="true"
+        android:text="@string/informations"
+        android:layout_alignParentBottom="true"
         android:layout_marginBottom="10dp"
     />
 
-    <Button
-        android:id="@+id/exitButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/exit_button"
-        android:layout_below="@+id/testButton"
-    />
 </RelativeLayout>
